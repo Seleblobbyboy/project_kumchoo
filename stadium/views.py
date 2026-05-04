@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.utils import timezone
-from .models import Field, Booking, Match, FinancialRecord
+from .models import Field, Booking, Match, FinancialRecord, Tournament, TournamentGroup
+
 from django.db.models import Sum
 from datetime import datetime
 from django.contrib.auth import authenticate, login, logout
@@ -215,58 +216,108 @@ def update_booking_status(request, booking_id):
 @login_required
 def matches_list(request):
     if request.method == 'POST':
-        match_id = request.POST.get('match_id')
-        title = request.POST.get('title')
-        field_id = request.POST.get('field_id')
-        team_a = request.POST.get('team_a')
-        team_b = request.POST.get('team_b')
-        match_date = request.POST.get('match_date')
-        start_time = request.POST.get('start_time')
-        end_time = request.POST.get('end_time')
-        score_a = request.POST.get('score_a', 0)
-        score_b = request.POST.get('score_b', 0)
-        status = request.POST.get('status', 'scheduled')
-
-        if title and field_id and team_a and team_b and match_date:
-            field = Field.objects.get(id=field_id)
-            if match_id:
-                try:
-                    match = Match.objects.get(id=match_id)
-                    match.title = title
-                    match.field = field
-                    match.team_a = team_a
-                    match.team_b = team_b
-                    match.match_date = match_date
-                    match.start_time = start_time
-                    match.end_time = end_time
-                    match.score_a = score_a
-                    match.score_b = score_b
-                    match.status = status
-                    match.save()
-                except Match.DoesNotExist:
-                    pass
-            else:
-                Match.objects.create(
-                    title=title,
-                    field=field,
-                    team_a=team_a,
-                    team_b=team_b,
-                    match_date=match_date,
-                    start_time=start_time,
-                    end_time=end_time,
-                    score_a=score_a,
-                    score_b=score_b,
-                    status=status
-                )
+        action = request.POST.get('action')
+        
+        # 1. Create Tournament
+        if action == 'create_tournament':
+            name = request.POST.get('tournament_name')
+            desc = request.POST.get('tournament_desc', '')
+            if name:
+                Tournament.objects.create(name=name, description=desc)
             return redirect('matches_list')
+            
+        # 2. Create Tournament Group
+        elif action == 'create_group':
+            tournament_id = request.POST.get('tournament_id')
+            group_name = request.POST.get('group_name')
+            if tournament_id and group_name:
+                try:
+                    tournament = Tournament.objects.get(id=tournament_id)
+                    TournamentGroup.objects.create(tournament=tournament, name=group_name)
+                except Tournament.DoesNotExist:
+                    pass
+            return redirect('matches_list')
+            
+        # 3. Create or Edit Match
+        else:
+            match_id = request.POST.get('match_id')
+            title = request.POST.get('title')
+            field_id = request.POST.get('field_id')
+            tournament_id = request.POST.get('tournament_id')
+            group_id = request.POST.get('group_id')
+            team_a = request.POST.get('team_a')
+            team_b = request.POST.get('team_b')
+            match_date = request.POST.get('match_date')
+            start_time = request.POST.get('start_time')
+            end_time = request.POST.get('end_time')
+            score_a = request.POST.get('score_a', 0)
+            score_b = request.POST.get('score_b', 0)
+            status = request.POST.get('status', 'scheduled')
+
+            if title and field_id and team_a and team_b and match_date:
+                field = Field.objects.get(id=field_id)
+                tournament = None
+                if tournament_id:
+                    try:
+                        tournament = Tournament.objects.get(id=tournament_id)
+                    except Tournament.DoesNotExist:
+                        pass
+                
+                group = None
+                if group_id:
+                    try:
+                        group = TournamentGroup.objects.get(id=group_id)
+                    except TournamentGroup.DoesNotExist:
+                        pass
+
+                if match_id:
+                    try:
+                        match = Match.objects.get(id=match_id)
+                        match.title = title
+                        match.field = field
+                        match.tournament = tournament
+                        match.group = group
+                        match.team_a = team_a
+                        match.team_b = team_b
+                        match.match_date = match_date
+                        match.start_time = start_time
+                        match.end_time = end_time
+                        match.score_a = score_a
+                        match.score_b = score_b
+                        match.status = status
+                        match.save()
+                    except Match.DoesNotExist:
+                        pass
+                else:
+                    Match.objects.create(
+                        title=title,
+                        field=field,
+                        tournament=tournament,
+                        group=group,
+                        team_a=team_a,
+                        team_b=team_b,
+                        match_date=match_date,
+                        start_time=start_time,
+                        end_time=end_time,
+                        score_a=score_a,
+                        score_b=score_b,
+                        status=status
+                    )
+                return redirect('matches_list')
 
     matches = Match.objects.all().order_by('-match_date', '-start_time')
     fields = Field.objects.all()
+    tournaments = Tournament.objects.all().order_by('-id')
+    groups = TournamentGroup.objects.all().order_by('tournament__name', 'name')
+    
     context = {
         'matches': matches,
         'fields': fields,
+        'tournaments': tournaments,
+        'groups': groups,
     }
     return render(request, 'stadium/matches_list.html', context)
+
 
 @login_required
 def finances_list(request):

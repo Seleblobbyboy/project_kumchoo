@@ -29,6 +29,21 @@ class Booking(models.Model):
     def __str__(self):
         return f"{self.customer_name} - {self.field.name} ({self.booking_date})"
 
+class Tournament(models.Model):
+    name = models.CharField("ชื่อรายการแข่งขัน", max_length=150)
+    description = models.TextField("รายละเอียดรายการแข่ง", blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+class TournamentGroup(models.Model):
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='groups', verbose_name="รายการแข่งขัน")
+    name = models.CharField("ชื่อสาย / กลุ่มการแข่ง", max_length=100, help_text="เช่น สาย A, สาย B")
+
+    def __str__(self):
+        return f"{self.tournament.name} - {self.name}"
+
 class Match(models.Model):
     STATUS_CHOICES = [
         ('scheduled', 'รอแข่งขัน'),
@@ -37,6 +52,8 @@ class Match(models.Model):
         ('cancelled', 'ยกเลิกการแข่ง'),
     ]
 
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='matches', verbose_name="รายการแข่งขัน", blank=True, null=True)
+    group = models.ForeignKey(TournamentGroup, on_delete=models.CASCADE, related_name='matches', verbose_name="สายการแข่ง", blank=True, null=True)
     title = models.CharField("ชื่องานแข่งขัน/แมตช์", max_length=150)
     field = models.ForeignKey(Field, on_delete=models.CASCADE, related_name='matches', verbose_name="สนาม")
     team_a = models.CharField("ทีม A", max_length=100)
