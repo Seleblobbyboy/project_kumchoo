@@ -384,6 +384,8 @@ def tournament_detail(request, tournament_id):
             team_a = request.POST.get('team_a')
             team_b = request.POST.get('team_b')
             match_date = request.POST.get('match_date')
+            if not match_date and tournament.start_date:
+                match_date = tournament.start_date
             start_time = request.POST.get('start_time')
             end_time = request.POST.get('end_time')
             score_a = request.POST.get('score_a', 0)
