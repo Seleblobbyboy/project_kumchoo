@@ -101,6 +101,16 @@ class FinancialRecord(models.Model):
         return f"[{self.get_record_type_display()}] {self.category} - {self.amount}"
 
 
+import os
+
+def user_directory_path(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/avatars/user_<id>/<filename>
+    # Get the file extension
+    ext = filename.split('.')[-1]
+    # Set the filename as 'profile_pic.ext' to keep it clean, or keep original.
+    # We will keep original filename but put it in user-specific folder.
+    return f'avatars/user_{instance.user.id}/{filename}'
+
 class UserProfile(models.Model):
     ROLE_CHOICES = [
         ('executive', 'ผู้บริหาร'),
@@ -109,7 +119,7 @@ class UserProfile(models.Model):
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     role = models.CharField("บทบาท (Role)", max_length=20, choices=ROLE_CHOICES, default='manager')
-    avatar = models.ImageField("รูปโปรไฟล์", upload_to='avatars/', blank=True, null=True)
+    avatar = models.ImageField("รูปโปรไฟล์", upload_to=user_directory_path, blank=True, null=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.get_role_display()}"

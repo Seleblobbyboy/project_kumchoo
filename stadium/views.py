@@ -3,8 +3,9 @@ from django.http import JsonResponse
 from django.utils import timezone
 from .models import Field, Booking, Match, FinancialRecord, Tournament, TournamentGroup, Team, UserProfile
 
-
 import json
+import os
+from django.conf import settings
 from django.db.models import Sum
 from datetime import datetime
 from django.contrib.auth import authenticate, login, logout
@@ -108,6 +109,13 @@ def profile_settings(request):
             if 'avatar' in request.FILES:
                 if not hasattr(request.user, 'profile'):
                     UserProfile.objects.create(user=request.user)
+                    
+                # Delete old avatar if it exists
+                if request.user.profile.avatar:
+                    old_path = os.path.join(settings.MEDIA_ROOT, request.user.profile.avatar.name)
+                    if os.path.isfile(old_path):
+                        os.remove(old_path)
+                        
                 request.user.profile.avatar = request.FILES['avatar']
                 request.user.profile.save()
                 return JsonResponse({'success': True, 'avatar_url': request.user.profile.avatar.url})
