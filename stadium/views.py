@@ -375,6 +375,17 @@ def tournament_detail(request, tournament_id):
                 TournamentGroup.objects.create(tournament=tournament, name=group_name)
             return redirect('tournament_detail', tournament_id=tournament.id)
 
+        # Delete Match
+        elif action == 'delete_match':
+            match_id = request.POST.get('match_id')
+            if match_id:
+                try:
+                    match = Match.objects.get(id=match_id)
+                    match.delete()
+                except Match.DoesNotExist:
+                    pass
+            return redirect('tournament_detail', tournament_id=tournament.id)
+
         # 3. Add or Edit Match
         elif action == 'create_match' or action == 'edit_match':
             match_id = request.POST.get('match_id')

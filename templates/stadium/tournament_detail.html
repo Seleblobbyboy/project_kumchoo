@@ -216,9 +216,12 @@
                 </div>
 
                 <!-- Card Bottom -->
-                <div class="flex items-center justify-end">
+                <div class="flex items-center justify-end gap-2">
                     <button onclick="openEditMatchModal('{{ m.id }}', '{{ m.title|escapejs }}', '{{ m.field.id }}', '{{ m.group.id|default:'' }}', '{{ m.team_a|escapejs }}', '{{ m.team_b|escapejs }}', '{{ m.match_date|date:'Y-m-d' }}', '{{ m.start_time|time:'H:i' }}', '{{ m.end_time|time:'H:i' }}', '{{ m.score_a }}', '{{ m.score_b }}', '{{ m.status }}')" class="text-xs font-semibold text-blue-600 bg-blue-50/60 hover:bg-blue-100 px-3 py-1.5 rounded-lg border border-blue-100/40 transition cursor-pointer">
                         <i class="fa-regular fa-pen-to-square mr-1"></i>แก้ไขข้อมูล / อัปเดตคะแนน
+                    </button>
+                    <button onclick="confirmDeleteMatch('{{ m.id }}')" class="text-xs font-semibold text-red-600 bg-red-50/60 hover:bg-red-100 px-3 py-1.5 rounded-lg border border-red-100/40 transition cursor-pointer">
+                        <i class="fa-regular fa-trash-can mr-1"></i>ลบ
                     </button>
                 </div>
             </div>
@@ -907,6 +910,46 @@
                 confirmButtonText: 'ตกลง',
                 confirmButtonColor: '#4f46e5'
             });
+        });
+    }
+
+    function confirmDeleteMatch(id) {
+        Swal.fire({
+            title: 'ยืนยันการลบ?',
+            text: "คุณต้องการลบตารางการแข่งขันนี้ใช่หรือไม่? การลบจะไม่สามารถกู้คืนได้",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'ใช่, ลบเลย',
+            cancelButtonText: 'ยกเลิก'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '';
+                
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = '{{ csrf_token }}';
+                
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'delete_match';
+                
+                const matchIdInput = document.createElement('input');
+                matchIdInput.type = 'hidden';
+                matchIdInput.name = 'match_id';
+                matchIdInput.value = id;
+                
+                form.appendChild(csrfInput);
+                form.appendChild(actionInput);
+                form.appendChild(matchIdInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
         });
     }
 </script>
