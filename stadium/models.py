@@ -50,6 +50,7 @@ class Team(models.Model):
     logo = models.ImageField("โลโก้ทีม / รูปทีม", upload_to='team_logos/', blank=True, null=True)
     main_players = models.TextField("รายชื่อผู้เล่นตัวจริง", blank=True, help_text="ใส่ชื่อสมาชิกคั่นด้วยจุลภาค")
     sub_players = models.TextField("รายชื่อผู้เล่นตัวสำรอง", blank=True, help_text="ใส่ชื่อตัวสำรองคั่นด้วยจุลภาค")
+    players_data = models.TextField("ข้อมูลผู้เล่นทั้งหมด (JSON)", blank=True, default="[]")
     description = models.TextField("รายละเอียดอื่นๆ", blank=True)
 
     def __str__(self):

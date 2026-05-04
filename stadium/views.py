@@ -3,6 +3,7 @@ from django.utils import timezone
 from .models import Field, Booking, Match, FinancialRecord, Tournament, TournamentGroup, Team
 
 
+import json
 from django.db.models import Sum
 from datetime import datetime
 from django.contrib.auth import authenticate, login, logout
@@ -409,9 +410,37 @@ def tournament_detail(request, tournament_id):
         elif action == 'create_team':
             team_name = request.POST.get('team_name')
             logo = request.FILES.get('logo')
-            main_players = request.POST.get('main_players', '')
-            sub_players = request.POST.get('sub_players', '')
             description = request.POST.get('description', '')
+            
+            players_json = request.POST.get('players_json', '[]')
+            players_data = players_json
+            
+            main_players_list = []
+            sub_players_list = []
+            
+            try:
+                p_list = json.loads(players_json)
+                for p in p_list:
+                    # Construct full label: e.g., "สมชาย (เบอร์ 10 - ชาย)"
+                    lbl = p.get('name', '').strip()
+                    parts = []
+                    if p.get('number'):
+                        parts.append(f"เบอร์ {p['number']}")
+                    if p.get('nickname'):
+                        parts.append(p['nickname'])
+                    
+                    if parts:
+                        lbl += f" ({' - '.join(parts)})"
+                        
+                    if p.get('role') == 'main':
+                        main_players_list.append(lbl)
+                    else:
+                        sub_players_list.append(lbl)
+            except Exception:
+                pass
+                
+            main_players = ", ".join(main_players_list)
+            sub_players = ", ".join(sub_players_list)
 
             if team_name:
                 Team.objects.create(
@@ -420,6 +449,7 @@ def tournament_detail(request, tournament_id):
                     logo=logo,
                     main_players=main_players,
                     sub_players=sub_players,
+                    players_data=players_data,
                     description=description
                 )
             return redirect('tournament_detail', tournament_id=tournament.id)

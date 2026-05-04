@@ -390,7 +390,7 @@
 
 <!-- Add Team Modal -->
 <div id="team-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-30 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-xl border border-slate-200 shadow-xl max-w-lg w-full p-6 animate-fade-in max-h-[90vh] overflow-y-auto">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-xl max-w-2xl w-full p-6 animate-fade-in max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
             <h3 class="text-base font-bold text-slate-800 flex items-center gap-1.5">
                 <i class="fa-solid fa-shield-halved text-emerald-600"></i>
@@ -400,41 +400,104 @@
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
         </div>
-        <form method="POST" enctype="multipart/form-data">
+        <form method="POST" enctype="multipart/form-data" onsubmit="preparePlayersJson()">
             {% csrf_token %}
             <input type="hidden" name="action" value="create_team">
-            <div class="flex flex-col gap-3.5">
-                <div class="flex flex-col">
-                    <label for="team_name" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">ชื่อทีม</label>
-                    <input type="text" name="team_name" id="team_name" required placeholder="เช่น ทีมออลสตาร์" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+            <input type="hidden" name="players_json" id="players_json" value="[]">
+
+            <div class="flex flex-col gap-4">
+                <!-- Row: Team Name and Logo -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="flex flex-col">
+                        <label for="team_name" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">ชื่อทีม</label>
+                        <input type="text" name="team_name" id="team_name" required placeholder="เช่น ทีมออลสตาร์" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="logo" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">โลโก้ทีม / รูปทีม</label>
+                        <input type="file" name="logo" id="logo" accept="image/*" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                    </div>
                 </div>
-                <div class="flex flex-col">
-                    <label for="logo" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">โลโก้ทีม / รูปทีม</label>
-                    <input type="file" name="logo" id="logo" accept="image/*" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
-                </div>
-                <div class="flex flex-col">
-                    <label for="main_players" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">รายชื่อผู้เล่นตัวจริง</label>
-                    <textarea name="main_players" id="main_players" rows="2" placeholder="เช่น นายเอ, นายบี" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition"></textarea>
-                </div>
-                <div class="flex flex-col">
-                    <label for="sub_players" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">รายชื่อผู้เล่นตัวสำรอง</label>
-                    <textarea name="sub_players" id="sub_players" rows="2" placeholder="เช่น นายซี, นายดี" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition"></textarea>
-                </div>
+
                 <div class="flex flex-col">
                     <label for="team_desc" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">รายละเอียดอื่นๆ</label>
                     <textarea name="description" id="team_desc" rows="2" placeholder="เช่น สังกัดทีม, ประวัติการแข่งขัน" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition"></textarea>
                 </div>
+
+                <!-- Dynamic Players List -->
+                <div class="border-t border-slate-100 pt-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-xs font-black text-slate-700 uppercase tracking-wide">รายชื่อผู้เล่นในทีม</label>
+                        <button type="button" onclick="addPlayerRow()" class="text-xs font-bold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100/50 px-2.5 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> เพิ่มผู้เล่น
+                        </button>
+                    </div>
+
+                    <div id="players-rows-container" class="flex flex-col gap-2.5 max-h-[240px] overflow-y-auto p-1 border border-slate-50 bg-slate-50/50 rounded-xl">
+                        <!-- Dynamic rows will be inserted here -->
+                    </div>
+                </div>
             </div>
-            <div class="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-3.5">
+
+            <div class="mt-6 flex items-center justify-end gap-2 border-t border-slate-100 pt-3.5">
                 <button type="button" onclick="closeTeamModal()" class="px-4 py-2 text-xs font-semibold border border-slate-200 text-slate-600 rounded-lg bg-slate-50 hover:bg-slate-100 transition cursor-pointer">ยกเลิก</button>
-                <button type="submit" class="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow transition cursor-pointer">บันทึก</button>
+                <button type="submit" class="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow transition cursor-pointer">บันทึกข้อมูลทีม</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
+    function addPlayerRow(name = '', number = '', nickname = '', role = 'main') {
+        const container = document.getElementById('players-rows-container');
+        const rowId = 'player-row-' + Date.now() + Math.floor(Math.random() * 1000);
+        
+        const rowDiv = document.createElement('div');
+        rowDiv.id = rowId;
+        rowDiv.className = 'player-row flex flex-wrap sm:flex-nowrap items-center gap-2 p-2 bg-white border border-slate-200/80 rounded-lg animate-fade-in shadow-sm';
+        
+        rowDiv.innerHTML = `
+            <div class="flex-1 min-w-[120px]">
+                <input type="text" class="p-name w-full px-2.5 py-1.5 border border-slate-100 rounded-md text-xs bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition" placeholder="ชื่อ-นามสกุล" value="${name}" required>
+            </div>
+            <div class="w-[80px]">
+                <input type="number" class="p-number w-full px-2.5 py-1.5 border border-slate-100 rounded-md text-xs bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition" placeholder="เบอร์" value="${number}">
+            </div>
+            <div class="w-[100px]">
+                <input type="text" class="p-nickname w-full px-2.5 py-1.5 border border-slate-100 rounded-md text-xs bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition" placeholder="ชื่อเล่น" value="${nickname}">
+            </div>
+            <div class="w-[110px]">
+                <select class="p-role w-full px-2.5 py-1.5 border border-slate-100 rounded-md text-xs bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition">
+                    <option value="main" ${role === 'main' ? 'selected' : ''}>ตัวจริง</option>
+                    <option value="sub" ${role === 'sub' ? 'selected' : ''}>ตัวสำรอง</option>
+                </select>
+            </div>
+            <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-red-400 hover:text-red-600 p-1.5 text-sm transition cursor-pointer shrink-0">
+                <i class="fa-regular fa-trash-can"></i>
+            </button>
+        `;
+        
+        container.appendChild(rowDiv);
+    }
+
+    function preparePlayersJson() {
+        const rows = document.querySelectorAll('.player-row');
+        const players = [];
+        rows.forEach(row => {
+            const name = row.querySelector('.p-name').value;
+            const number = row.querySelector('.p-number').value;
+            const nickname = row.querySelector('.p-nickname').value;
+            const role = row.querySelector('.p-role').value;
+            if (name.trim()) {
+                players.push({ name, number, nickname, role });
+            }
+        });
+        document.getElementById('players_json').value = JSON.stringify(players);
+    }
+
     function openTeamModal() {
+        document.getElementById('players-rows-container').innerHTML = '';
+        // Add one default player row for initial empty view
+        addPlayerRow();
         document.getElementById('team-modal').classList.remove('hidden');
     }
     function closeTeamModal() {
