@@ -17,45 +17,45 @@
 </div>
 
 <!-- Main Panels / Table -->
-<div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
-    <div class="p-5 border-b border-slate-100 flex items-center justify-between">
-        <h2 class="font-bold text-slate-800 flex items-center gap-2">
+<div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden mt-2">
+    <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+        <h2 class="font-black text-slate-800 flex items-center gap-2 text-lg">
             <i class="fa-solid fa-list-check text-indigo-500"></i>
             รายการเงินเข้า-ออกทั้งหมด
         </h2>
-        <span class="text-xs bg-slate-100 text-slate-500 border border-slate-200 py-1 px-3 rounded-full font-semibold">{{ records|length }} รายการ</span>
+        <span class="text-xs bg-slate-100 text-slate-500 border border-slate-200 py-1.5 px-4 rounded-full font-bold">{{ records|length }} รายการ</span>
     </div>
 
     {% if records %}
     <div class="overflow-x-auto">
         <table class="w-full text-sm text-left text-slate-600">
-            <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-100">
+            <thead class="text-xs font-bold text-slate-500 uppercase bg-slate-50/80 border-b border-slate-100">
                 <tr>
-                    <th class="px-5 py-3">วันที่</th>
-                    <th class="px-5 py-3">ประเภทรายการ</th>
-                    <th class="px-5 py-3">หมวดหมู่</th>
-                    <th class="px-5 py-3">รายละเอียด</th>
-                    <th class="px-5 py-3">จำนวนเงิน (บาท)</th>
+                    <th class="px-6 py-4">วันที่</th>
+                    <th class="px-6 py-4">ประเภทรายการ</th>
+                    <th class="px-6 py-4">หมวดหมู่</th>
+                    <th class="px-6 py-4">รายละเอียด</th>
+                    <th class="px-6 py-4 text-right">จำนวนเงิน (บาท)</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
                 {% for r in records %}
-                <tr class="hover:bg-slate-50/50 transition">
-                    <td class="px-5 py-4 font-medium text-slate-500">{{ r.date|date:"d M Y" }}</td>
-                    <td class="px-5 py-4">
+                <tr class="hover:bg-slate-50/80 transition group">
+                    <td class="px-6 py-5 font-semibold text-slate-500">{{ r.date|date:"d M Y" }}</td>
+                    <td class="px-6 py-5">
                         {% if r.record_type == 'income' %}
-                        <span class="px-2.5 py-1 text-xs font-bold bg-green-50 text-green-600 border border-green-200/60 rounded-md">
+                        <span class="px-3 py-1.5 text-xs font-bold bg-green-50 text-green-700 border border-green-200 rounded-md shadow-sm">
                             <i class="fa-solid fa-arrow-down mr-1"></i>รายรับ
                         </span>
                         {% else %}
-                        <span class="px-2.5 py-1 text-xs font-bold bg-red-50 text-red-600 border border-red-200/60 rounded-md">
+                        <span class="px-3 py-1.5 text-xs font-bold bg-red-50 text-red-700 border border-red-200 rounded-md shadow-sm">
                             <i class="fa-solid fa-arrow-up mr-1"></i>รายจ่าย
                         </span>
                         {% endif %}
                     </td>
-                    <td class="px-5 py-4 font-bold text-slate-800">{{ r.category }}</td>
-                    <td class="px-5 py-4 text-slate-600">{{ r.description|default:"-" }}</td>
-                    <td class="px-5 py-4 font-extrabold {% if r.record_type == 'income' %}text-green-600{% else %}text-red-600{% endif %}">
+                    <td class="px-6 py-5 font-bold text-slate-800 text-base">{{ r.category }}</td>
+                    <td class="px-6 py-5 text-slate-500 font-medium">{{ r.description|default:"-" }}</td>
+                    <td class="px-6 py-5 text-right font-black text-lg {% if r.record_type == 'income' %}text-green-600{% else %}text-red-600{% endif %}">
                         {% if r.record_type == 'income' %}+{% else %}-{% endif %}฿{{ r.amount|floatformat:2 }}
                     </td>
                 </tr>

@@ -70,9 +70,9 @@
 
     <!-- Tournaments Overview -->
     {% if tournaments %}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for t in tournaments %}
-        <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm p-4 flex flex-col justify-between gap-3">
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-5 flex flex-col justify-between gap-4">
             <div>
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-black text-blue-600 bg-blue-50/50 px-2.5 py-1 rounded-md border border-blue-100/50 uppercase tracking-wide">
@@ -84,26 +84,26 @@
                     </span>
                     {% endif %}
                 </div>
-                <h3 class="text-base font-extrabold text-slate-800 mt-2 leading-snug">{{ t.name }}</h3>
-                <p class="text-xs font-medium text-slate-400 mt-1 line-clamp-2">{{ t.description|default:"ไม่มีรายละเอียด" }}</p>
+                <h3 class="text-lg font-extrabold text-slate-800 mt-3 leading-snug">{{ t.name }}</h3>
+                <p class="text-sm font-medium text-slate-400 mt-1 line-clamp-2">{{ t.description|default:"ไม่มีรายละเอียด" }}</p>
             </div>
             
-            <div class="border-t border-slate-100 pt-2 flex flex-col gap-1">
+            <div class="border-t border-slate-100 pt-3 flex flex-col gap-1.5">
                 <span class="text-xs font-bold text-slate-500">สาย / กลุ่มการแข่ง:</span>
-                <div class="flex flex-wrap gap-1 mt-1">
+                <div class="flex flex-wrap gap-1.5 mt-1">
                     {% for g in t.groups.all %}
-                    <span class="text-[10px] font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-200">
+                    <span class="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded border border-slate-200">
                         {{ g.name }}
                     </span>
                     {% empty %}
-                    <span class="text-[10px] font-medium text-slate-400 italic">ยังไม่ได้แบ่งสาย</span>
+                    <span class="text-xs font-medium text-slate-400 italic">ยังไม่ได้แบ่งสาย</span>
                     {% endfor %}
                 </div>
             </div>
             
             <!-- Manage button -->
-            <div class="border-t border-slate-100 pt-2 flex items-center justify-end">
-                <a href="{% url 'tournament_detail' t.id %}" class="text-xs font-bold text-blue-600 bg-blue-50/60 hover:bg-blue-100 px-3 py-1.5 rounded-lg border border-blue-100/40 transition">
+            <div class="border-t border-slate-100 pt-3 flex items-center justify-end mt-1">
+                <a href="{% url 'tournament_detail' t.id %}" class="text-xs font-bold text-blue-600 bg-blue-50/60 hover:bg-blue-100 px-3.5 py-2 rounded-lg border border-blue-100/40 transition">
                     <i class="fa-solid fa-gear mr-1"></i>จัดการรายการแข่ง
                 </a>
             </div>
@@ -113,18 +113,18 @@
     {% endif %}
 
     <!-- Divider -->
-    <div class="h-px bg-slate-200 my-1"></div>
+    <div class="h-px bg-slate-200 my-3"></div>
 
     <!-- Matches Grid -->
     <div>
-        <h3 class="text-sm font-black text-slate-800 mb-4 flex items-center gap-1.5">
+        <h3 class="text-base font-black text-slate-800 mb-5 flex items-center gap-2">
             <i class="fa-solid fa-calendar-check text-blue-600"></i>
             ตารางการแข่งขันทั้งหมด
         </h3>
         {% if matches %}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
             {% for m in matches %}
-            <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm p-5 flex flex-col justify-between gap-4 transition hover:shadow-md">
+            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 flex flex-col justify-between gap-5 transition hover:shadow-md">
                 <!-- Card Top -->
                 <div class="flex items-start justify-between border-b border-slate-100 pb-2.5">
                     <div>

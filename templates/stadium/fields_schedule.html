@@ -33,23 +33,23 @@
 </div>
 
 <!-- Main Panels for Bookings & Matches -->
-<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-4">
     <!-- Panel 1: Bookings of the selected field -->
-    <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm p-5">
-        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
-            <h2 class="font-bold text-slate-800 flex items-center gap-2">
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
+        <div class="flex items-center justify-between mb-5 border-b border-slate-100 pb-4">
+            <h2 class="font-black text-lg text-slate-800 flex items-center gap-2.5">
                 <i class="fa-solid fa-ticket text-blue-500"></i>
                 ตารางการจองสนาม - {{ selected_field.name }}
             </h2>
-            <span class="text-xs bg-slate-100 text-slate-500 border border-slate-200 py-1 px-3 rounded-full font-semibold">{{ bookings|length }} รายการ</span>
+            <span class="text-xs bg-slate-100 text-slate-500 border border-slate-200 py-1.5 px-4 rounded-full font-bold">{{ bookings|length }} รายการ</span>
         </div>
 
         {% if bookings %}
-        <div class="space-y-3">
+        <div class="space-y-4">
             {% for b in bookings %}
-            <div class="p-4 border border-slate-100 bg-slate-50/60 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3 transition hover:shadow-sm">
+            <div class="p-5 border border-slate-100 bg-slate-50/60 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition hover:shadow-sm">
                 <div>
-                    <div class="text-xs font-bold text-slate-400 tracking-wider uppercase mb-1">เวลาแข่งขัน / ใช้งาน</div>
+                    <div class="text-xs font-bold text-slate-400 tracking-wider uppercase mb-1.5">เวลาแข่งขัน / ใช้งาน</div>
                     <div class="text-lg font-extrabold text-slate-800 mb-0.5">
                         <i class="fa-regular fa-clock mr-1 text-slate-500"></i>
                         {{ b.start_time|time:"H:i" }} - {{ b.end_time|time:"H:i" }}
@@ -96,19 +96,19 @@
     </div>
 
     <!-- Panel 2: Matches of the selected field -->
-    <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm p-5">
-        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
-            <h2 class="font-bold text-slate-800 flex items-center gap-2">
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
+        <div class="flex items-center justify-between mb-5 border-b border-slate-100 pb-4">
+            <h2 class="font-black text-lg text-slate-800 flex items-center gap-2.5">
                 <i class="fa-solid fa-futbol text-orange-500"></i>
                 ตารางแข่งขันฟุตบอล - {{ selected_field.name }}
             </h2>
-            <span class="text-xs bg-slate-100 text-slate-500 border border-slate-200 py-1 px-3 rounded-full font-semibold">{{ matches|length }} รายการ</span>
+            <span class="text-xs bg-slate-100 text-slate-500 border border-slate-200 py-1.5 px-4 rounded-full font-bold">{{ matches|length }} รายการ</span>
         </div>
 
         {% if matches %}
-        <div class="space-y-3">
+        <div class="space-y-4">
             {% for m in matches %}
-            <div class="p-4 border border-slate-100 bg-slate-50/60 rounded-xl flex flex-col justify-between items-stretch gap-4 transition hover:shadow-sm">
+            <div class="p-5 border border-slate-100 bg-slate-50/60 rounded-xl flex flex-col justify-between items-stretch gap-5 transition hover:shadow-sm">
                 <!-- Title and status -->
                 <div class="flex flex-col sm:flex-row justify-between items-start gap-2 border-b border-slate-100 pb-2.5">
                     <div>

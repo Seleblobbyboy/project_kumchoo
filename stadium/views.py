@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.http import JsonResponse
 from django.utils import timezone
 from .models import Field, Booking, Match, FinancialRecord, Tournament, TournamentGroup, Team, UserProfile
 
@@ -85,6 +86,135 @@ def forgot_password_view(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+
+@login_required(login_url='login')
+def profile_settings(request):
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'update_profile':
+            first_name = request.POST.get('first_name')
+            last_name = request.POST.get('last_name')
+            email = request.POST.get('email')
+            
+            request.user.first_name = first_name
+            request.user.last_name = last_name
+            request.user.email = email
+            request.user.save()
+            # We don't save avatar here anymore, it's done via AJAX
+            messages.success(request, 'อัปเดตข้อมูลโปรไฟล์เรียบร้อยแล้ว')
+            
+        elif action == 'update_avatar':
+            if 'avatar' in request.FILES:
+                if not hasattr(request.user, 'profile'):
+                    UserProfile.objects.create(user=request.user)
+                request.user.profile.avatar = request.FILES['avatar']
+                request.user.profile.save()
+                return JsonResponse({'success': True, 'avatar_url': request.user.profile.avatar.url})
+            return JsonResponse({'success': False, 'error': 'No file uploaded'})
+            
+        elif action == 'change_password':
+            old_password = request.POST.get('old_password')
+            new_password = request.POST.get('new_password')
+            confirm_password = request.POST.get('confirm_password')
+            
+            if not request.user.check_password(old_password):
+                messages.error(request, 'รหัสผ่านเดิมไม่ถูกต้อง')
+            elif new_password != confirm_password:
+                messages.error(request, 'รหัสผ่านใหม่ไม่ตรงกัน')
+            else:
+                request.user.set_password(new_password)
+                request.user.save()
+                # Update auth hash to keep user logged in after password change
+                from django.contrib.auth import update_session_auth_hash
+                update_session_auth_hash(request, request.user)
+                messages.success(request, 'เปลี่ยนรหัสผ่านเรียบร้อยแล้ว')
+                
+        return redirect('profile_settings')
+        
+    return render(request, 'stadium/profile_settings.html')
+
+
+@login_required(login_url='login')
+def user_management(request):
+    # Only allow executives to manage users
+    if not hasattr(request.user, 'profile') or request.user.profile.role != 'executive':
+        messages.error(request, 'คุณไม่มีสิทธิ์เข้าถึงหน้านี้ (เฉพาะผู้บริหาร)')
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'update_role':
+            target_user_id = request.POST.get('user_id')
+            new_role = request.POST.get('role')
+            
+            # Prevent changing your own role or if new_role is invalid
+            if str(target_user_id) == str(request.user.id):
+                messages.error(request, 'คุณไม่สามารถเปลี่ยนบทบาทของตัวเองได้')
+            elif new_role in dict(UserProfile.ROLE_CHOICES).keys():
+                try:
+                    target_user = User.objects.get(id=target_user_id)
+                    target_profile, created = UserProfile.objects.get_or_create(user=target_user)
+                    target_profile.role = new_role
+                    target_profile.save()
+                    messages.success(request, f'อัปเดตบทบาทของ {target_user.username} เป็น {target_profile.get_role_display()} แล้ว')
+                except User.DoesNotExist:
+                    messages.error(request, 'ไม่พบผู้ใช้งานนี้')
+                    
+        elif action == 'delete_user':
+            target_user_id = request.POST.get('user_id')
+            if str(target_user_id) == str(request.user.id):
+                messages.error(request, 'คุณไม่สามารถลบบัญชีของตัวเองได้ในหน้านี้')
+            elif str(target_user_id) == '1':
+                messages.error(request, 'ไม่สามารถลบบัญชีแอดมินหลักของระบบได้')
+            else:
+                try:
+                    target_user = User.objects.get(id=target_user_id)
+                    username = target_user.username
+                    target_user.delete()
+                    messages.success(request, f'ลบบัญชี {username} เรียบร้อยแล้ว')
+                except User.DoesNotExist:
+                    messages.error(request, 'ไม่พบผู้ใช้งานนี้')
+
+        elif action == 'add_user':
+            username = request.POST.get('username')
+            first_name = request.POST.get('first_name', '')
+            last_name = request.POST.get('last_name', '')
+            email = request.POST.get('email', '')
+            password = request.POST.get('password')
+            role = request.POST.get('role', 'manager')
+
+            if User.objects.filter(username=username).exists():
+                messages.error(request, f'ชื่อผู้ใช้ {username} มีอยู่ในระบบแล้ว')
+            else:
+                new_user = User.objects.create_user(
+                    username=username,
+                    password=password,
+                    first_name=first_name,
+                    last_name=last_name,
+                    email=email
+                )
+                UserProfile.objects.create(user=new_user, role=role)
+                messages.success(request, f'เพิ่มผู้ใช้งาน {username} เรียบร้อยแล้ว')
+
+        return redirect('user_management')
+        
+    # Get all users with their profiles
+    # Select related to avoid N+1 query problem
+    users = list(User.objects.select_related('profile').order_by('-date_joined'))
+    
+    # Ensure all users have a profile
+    for u in users:
+        if not hasattr(u, 'profile'):
+            UserProfile.objects.create(user=u, role='manager')
+            u.refresh_from_db()
+            
+    context = {
+        'users_list': users,
+        'roles': UserProfile.ROLE_CHOICES,
+    }
+    return render(request, 'stadium/user_management.html', context)
 
 
 # Main Application Views (Login Required)
@@ -568,6 +698,11 @@ def tournament_detail(request, tournament_id):
     matches = tournament.matches.all().order_by('-match_date', '-start_time')
     teams = tournament.teams.all().order_by('name')
     
+    # Calculate stats
+    teams_count = teams.count()
+    live_matches_count = tournament.matches.filter(status='live').count()
+    completed_matches_count = tournament.matches.filter(status='completed').count()
+    
     selected_group_id = request.GET.get('group')
     if selected_group_id:
         try:
@@ -584,6 +719,9 @@ def tournament_detail(request, tournament_id):
         'fields': fields,
         'teams': teams,
         'selected_group_id': selected_group_id,
+        'teams_count': teams_count,
+        'live_matches_count': live_matches_count,
+        'completed_matches_count': completed_matches_count,
     }
     return render(request, 'stadium/tournament_detail.html', context)
 

@@ -33,60 +33,82 @@
                     <div>
                         <div class="text-sm font-bold tracking-wider uppercase text-orange-500 leading-tight">Kumchoo</div>
                         <div class="text-xs font-semibold uppercase text-slate-400 tracking-wide">Stadium</div>
-                        {% if user_role %}
-                        <div class="mt-1">
-                            <span class="inline-block px-1.5 py-0.5 bg-blue-500/20 text-blue-300 text-[10px] font-black rounded uppercase border border-blue-500/30">
-                                <i class="fa-solid fa-user-tag text-[9px] mr-1"></i>{{ user_role_display }}
-                            </span>
-                        </div>
-                        {% endif %}
                     </div>
                 </a>
             </div>
 
             <!-- Navigation Links -->
-            <nav class="p-4 flex flex-col gap-1.5 text-sm font-medium">
-                <a href="{% url 'dashboard' %}" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-800 transition {% if request.resolver_match.url_name == 'dashboard' %}bg-blue-600/20 text-blue-400 border border-blue-500/30{% else %}text-slate-300 hover:text-white{% endif %}">
-                    <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+            <nav class="p-4 flex flex-col gap-2 text-sm font-bold">
+                <a href="{% url 'dashboard' %}" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl hover:bg-slate-800 transition {% if request.resolver_match.url_name == 'dashboard' %}bg-blue-600/20 text-blue-400 border border-blue-500/30{% else %}text-slate-400 hover:text-white{% endif %}">
+                    <i class="fa-solid fa-chart-pie w-5 text-center text-lg"></i>
                     <span>แดชบอร์ด</span>
                 </a>
                 
                 {% if user_role != 'referee' %}
-                <a href="{% url 'fields_schedule' %}" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-800 transition {% if request.resolver_match.url_name == 'fields_schedule' %}bg-blue-600/20 text-blue-400 border border-blue-500/30{% else %}text-slate-300 hover:text-white{% endif %}">
-                    <i class="fa-solid fa-calendar-days w-5 text-center"></i>
+                <a href="{% url 'fields_schedule' %}" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl hover:bg-slate-800 transition {% if request.resolver_match.url_name == 'fields_schedule' %}bg-blue-600/20 text-blue-400 border border-blue-500/30{% else %}text-slate-400 hover:text-white{% endif %}">
+                    <i class="fa-solid fa-calendar-days w-5 text-center text-lg"></i>
                     <span>ตารางเวลาแต่ละสนาม</span>
                 </a>
-                <a href="{% url 'bookings_list' %}" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-800 transition {% if request.resolver_match.url_name == 'bookings_list' %}bg-blue-600/20 text-blue-400 border border-blue-500/30{% else %}text-slate-300 hover:text-white{% endif %}">
-                    <i class="fa-solid fa-ticket w-5 text-center"></i>
+                <a href="{% url 'bookings_list' %}" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl hover:bg-slate-800 transition {% if request.resolver_match.url_name == 'bookings_list' %}bg-blue-600/20 text-blue-400 border border-blue-500/30{% else %}text-slate-400 hover:text-white{% endif %}">
+                    <i class="fa-solid fa-ticket w-5 text-center text-lg"></i>
                     <span>การจองสนาม</span>
                 </a>
                 {% endif %}
 
-                <a href="{% url 'matches_list' %}" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-800 transition {% if request.resolver_match.url_name == 'matches_list' %}bg-blue-600/20 text-blue-400 border border-blue-500/30{% else %}text-slate-300 hover:text-white{% endif %}">
-                    <i class="fa-solid fa-futbol w-5 text-center"></i>
+                <a href="{% url 'matches_list' %}" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl hover:bg-slate-800 transition {% if request.resolver_match.url_name == 'matches_list' %}bg-blue-600/20 text-blue-400 border border-blue-500/30{% else %}text-slate-400 hover:text-white{% endif %}">
+                    <i class="fa-solid fa-futbol w-5 text-center text-lg"></i>
                     <span>การแข่งแต่ละทีม</span>
                 </a>
 
                 {% if user_role != 'referee' %}
-                <a href="{% url 'finances_list' %}" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-800 transition {% if request.resolver_match.url_name == 'finances_list' %}bg-blue-600/20 text-blue-400 border border-blue-500/30{% else %}text-slate-300 hover:text-white{% endif %}">
-                    <i class="fa-solid fa-wallet w-5 text-center"></i>
+                <a href="{% url 'finances_list' %}" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl hover:bg-slate-800 transition {% if request.resolver_match.url_name == 'finances_list' %}bg-blue-600/20 text-blue-400 border border-blue-500/30{% else %}text-slate-400 hover:text-white{% endif %}">
+                    <i class="fa-solid fa-wallet w-5 text-center text-lg"></i>
                     <span>การเงิน</span>
                 </a>
                 {% endif %}
-                
-                <div class="h-px bg-slate-800 my-2"></div>
-                
-                <a href="{% url 'logout' %}" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-red-600/20 text-red-400 border border-transparent hover:border-red-500/30 transition">
-                    <i class="fa-solid fa-right-from-bracket w-5 text-center"></i>
-                    <span>ออกจากระบบ</span>
+
+                {% if user_role == 'executive' %}
+                <div class="h-px bg-slate-800 my-1"></div>
+                <a href="{% url 'user_management' %}" class="flex items-center space-x-3 px-4 py-3.5 rounded-xl hover:bg-slate-800 transition {% if request.resolver_match.url_name == 'user_management' %}bg-indigo-600/20 text-indigo-400 border border-indigo-500/30{% else %}text-slate-400 hover:text-white{% endif %}">
+                    <i class="fa-solid fa-users-gear w-5 text-center text-lg"></i>
+                    <span>จัดการผู้ใช้งาน</span>
                 </a>
+                {% endif %}
             </nav>
         </div>
 
-        <!-- Sidebar footer -->
-        <div class="p-4 border-t border-slate-800 text-xs text-slate-500 text-center select-none bg-slate-950/20">
-            ระบบบริหารจัดการสนามฟุตบอล<br>
-            Kumchoo Stadium v1.0
+        <div class="mt-auto flex flex-col">
+            <!-- User Profile Block -->
+            <div class="p-4 border-t border-slate-800 bg-slate-900 flex items-center justify-between gap-2">
+                <a href="{% url 'profile_settings' %}" class="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition cursor-pointer">
+                    <div class="relative h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 border border-slate-700/50 shrink-0 shadow-inner overflow-hidden">
+                        {% if request.user.profile.avatar %}
+                            <img id="sidebar-avatar-img" src="{{ request.user.profile.avatar.url }}" alt="Avatar" class="absolute inset-0 w-full h-full object-cover">
+                            <i id="sidebar-avatar-icon" class="fa-solid fa-user text-sm hidden"></i>
+                        {% else %}
+                            <img id="sidebar-avatar-img" src="" alt="Avatar" class="absolute inset-0 w-full h-full object-cover hidden">
+                            <i id="sidebar-avatar-icon" class="fa-solid fa-user text-sm"></i>
+                        {% endif %}
+                    </div>
+                    <div class="flex flex-col truncate overflow-hidden">
+                        <span class="text-sm font-bold text-white truncate">{{ request.user.username|default:"ผู้ใช้งาน" }}</span>
+                        {% if user_role %}
+                        <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider mt-0.5">
+                            <i class="fa-solid fa-user-shield mr-1"></i>{{ user_role_display }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </a>
+                
+                <a href="{% url 'logout' %}" class="h-9 w-9 flex items-center justify-center rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/20 transition shrink-0" title="ออกจากระบบ">
+                    <i class="fa-solid fa-right-from-bracket text-lg"></i>
+                </a>
+            </div>
+
+            <!-- Sidebar footer -->
+            <div class="py-3 px-4 border-t border-slate-800 text-[10px] font-medium text-slate-500 text-center select-none bg-slate-950/40">
+                ระบบบริหารจัดการสนามฟุตบอล &copy; 2026
+            </div>
         </div>
     </aside>
 
@@ -114,7 +136,7 @@
         </header>
 
         <!-- Dynamic Content Body -->
-        <div class="p-6 flex-1 flex flex-col gap-6">
+        <div class="p-4 sm:p-6 lg:p-8 flex-1 flex flex-col gap-6 sm:gap-8 max-w-7xl mx-auto w-full">
             {% block content %}
             {% endblock %}
         </div>

@@ -1,0 +1,247 @@
+{% extends 'stadium/base.html' %}
+
+{% block header_title %}จัดการผู้ใช้งานระบบ (User Management){% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-6 max-w-7xl mx-auto w-full">
+    
+    <!-- Header / Info -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-xl font-black text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-users-gear text-indigo-500"></i>
+                จัดการสิทธิ์และผู้ใช้งาน
+            </h2>
+            <p class="text-sm font-medium text-slate-500 mt-1">กำหนดสิทธิ์การเข้าถึงระบบให้กับผู้ใช้งานแต่ละคนตาม Role</p>
+        </div>
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <span class="px-4 py-2 bg-slate-100 text-slate-600 text-sm font-bold rounded-xl border border-slate-200/80 text-center sm:text-left">
+                จำนวนผู้ใช้งานทั้งหมด: <span class="text-indigo-600">{{ users_list|length }}</span>
+            </span>
+            <button onclick="openAddUserModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 text-sm rounded-xl shadow-sm hover:shadow transition flex items-center justify-center gap-2 cursor-pointer">
+                <i class="fa-solid fa-user-plus"></i>
+                เพิ่มผู้ใช้งาน
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Table -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left text-slate-600">
+                <thead class="text-xs font-bold text-slate-500 uppercase bg-slate-50/80 border-b border-slate-100">
+                    <tr>
+                        <th class="px-6 py-4">ผู้ใช้งาน (Username)</th>
+                        <th class="px-6 py-4">อีเมล (Email)</th>
+                        <th class="px-6 py-4">บทบาทปัจจุบัน (Role)</th>
+                        <th class="px-6 py-4">วันที่สมัคร</th>
+                        <th class="px-6 py-4 text-right">จัดการ</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for u in users_list %}
+                    <tr class="hover:bg-slate-50/80 transition group">
+                        <td class="px-6 py-5">
+                            <div class="flex items-center gap-3">
+                                <div class="relative h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200 shrink-0 overflow-hidden">
+                                    {% if u.profile.avatar %}
+                                        <img src="{{ u.profile.avatar.url }}" alt="Avatar" class="absolute inset-0 w-full h-full object-cover">
+                                    {% else %}
+                                        <i class="fa-solid fa-user relative z-10"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-base font-bold text-slate-800">{{ u.username }}</span>
+                                    {% if u.first_name or u.last_name %}
+                                    <span class="text-xs font-medium text-slate-500 mt-0.5">{{ u.first_name }} {{ u.last_name }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-5 font-medium text-slate-600">{{ u.email|default:"ไม่มีอีเมล" }}</td>
+                        <td class="px-6 py-5">
+                            {% with role=u.profile.role %}
+                                {% if role == 'executive' %}
+                                <span class="px-3 py-1.5 text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg shadow-sm flex items-center gap-1.5 w-fit">
+                                    <i class="fa-solid fa-user-tie"></i>ผู้บริหาร
+                                </span>
+                                {% elif role == 'manager' %}
+                                <span class="px-3 py-1.5 text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 rounded-lg shadow-sm flex items-center gap-1.5 w-fit">
+                                    <i class="fa-solid fa-user-gear"></i>ผู้จัดการ
+                                </span>
+                                {% elif role == 'referee' %}
+                                <span class="px-3 py-1.5 text-xs font-bold bg-orange-50 text-orange-700 border border-orange-200 rounded-lg shadow-sm flex items-center gap-1.5 w-fit">
+                                    <i class="fa-solid fa-whistle"></i>กรรมการ
+                                </span>
+                                {% else %}
+                                <span class="px-3 py-1.5 text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 rounded-lg shadow-sm flex items-center gap-1.5 w-fit">
+                                    <i class="fa-solid fa-user"></i>ไม่มีสิทธิ์
+                                </span>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td class="px-6 py-5 font-medium text-slate-500">{{ u.date_joined|date:"d M Y" }}</td>
+                        <td class="px-6 py-5 text-right">
+                            {% if u.id != request.user.id %}
+                            <div class="flex items-center justify-end gap-2">
+                                <button onclick="openRoleModal('{{ u.id }}', '{{ u.username }}', '{{ u.profile.role }}')" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-2 rounded-lg transition border border-indigo-100/50 cursor-pointer">
+                                    เปลี่ยนสิทธิ์
+                                </button>
+                                {% if u.id != 1 %}
+                                <form method="POST" onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้งาน {{ u.username }}? การกระทำนี้ไม่สามารถย้อนกลับได้');" class="inline-block">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete_user">
+                                    <input type="hidden" name="user_id" value="{{ u.id }}">
+                                    <button type="submit" class="text-xs font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg transition border border-red-100/50 cursor-pointer">
+                                        ลบ
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <span class="text-xs font-bold text-slate-400 italic">บัญชีของคุณ</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Change Role Modal -->
+<div id="role-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-30 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl max-w-sm w-full p-6 sm:p-8 animate-fade-in">
+        <div class="flex items-center justify-between mb-5 border-b border-slate-100 pb-4">
+            <h3 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-user-shield text-indigo-500"></i>
+                เปลี่ยนบทบาทผู้ใช้งาน
+            </h3>
+            <button onclick="closeRoleModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer transition">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+
+        <form id="role-form" method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_role">
+            <input type="hidden" name="user_id" id="modal_user_id">
+            
+            <div class="flex flex-col gap-4">
+                <p class="text-sm font-medium text-slate-600">
+                    เปลี่ยนสิทธิ์สำหรับ <span id="modal_username" class="font-bold text-slate-800 text-base"></span>
+                </p>
+
+                <div class="flex flex-col">
+                    <label for="modal_role" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">บทบาท (Role)</label>
+                    <select name="role" id="modal_role" class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition">
+                        {% for role_val, role_name in roles %}
+                        <option value="{{ role_val }}">{{ role_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-8 flex items-center justify-end gap-3">
+                <button type="button" onclick="closeRoleModal()" class="px-4 py-2.5 text-sm font-bold border border-slate-200 text-slate-600 rounded-xl bg-white hover:bg-slate-50 transition cursor-pointer">ยกเลิก</button>
+                <button type="submit" class="px-4 py-2.5 text-sm font-bold bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl shadow transition cursor-pointer">บันทึกสิทธิ์</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div id="add-user-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <h3 class="text-lg font-black text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-user-plus text-indigo-500"></i>
+                เพิ่มผู้ใช้งานใหม่
+            </h3>
+            <button onclick="closeAddUserModal()" class="text-slate-400 hover:text-slate-600 transition cursor-pointer">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        
+        <form method="POST" class="p-6">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_user">
+            
+            <div class="flex flex-col gap-4">
+                <div class="flex flex-col">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">ชื่อผู้ใช้งาน (Username) *</label>
+                    <input type="text" name="username" required placeholder="ชื่อล็อกอิน" class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition">
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">ชื่อจริง</label>
+                        <input type="text" name="first_name" placeholder="ชื่อจริง" class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition">
+                    </div>
+                    <div class="flex flex-col">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">นามสกุล</label>
+                        <input type="text" name="last_name" placeholder="นามสกุล" class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition">
+                    </div>
+                </div>
+                
+                <div class="flex flex-col">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">อีเมล</label>
+                    <input type="email" name="email" placeholder="example@email.com" class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition">
+                </div>
+                
+                <div class="flex flex-col">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">รหัสผ่าน *</label>
+                    <input type="password" name="password" required placeholder="••••••••" class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition">
+                </div>
+                
+                <div class="flex flex-col">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">สิทธิ์ผู้ใช้งาน (Role) *</label>
+                    <select name="role" required class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition appearance-none cursor-pointer">
+                        <option value="manager">ผู้จัดการ (Manager)</option>
+                        <option value="referee">กรรมการ (Referee)</option>
+                        <option value="executive">ผู้บริหาร (Executive)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="mt-8 flex items-center justify-end gap-3">
+                <button type="button" onclick="closeAddUserModal()" class="px-4 py-2.5 text-sm font-bold border border-slate-200 text-slate-600 rounded-xl bg-white hover:bg-slate-50 transition cursor-pointer">ยกเลิก</button>
+                <button type="submit" class="px-4 py-2.5 text-sm font-bold bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl shadow transition cursor-pointer">เพิ่มผู้ใช้งาน</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openRoleModal(userId, username, currentRole) {
+        document.getElementById('modal_user_id').value = userId;
+        document.getElementById('modal_username').textContent = username;
+        
+        const roleSelect = document.getElementById('modal_role');
+        // Set the current role
+        for (let i = 0; i < roleSelect.options.length; i++) {
+            if (roleSelect.options[i].value === currentRole) {
+                roleSelect.selectedIndex = i;
+                break;
+            }
+        }
+        
+        document.getElementById('role-modal').classList.remove('hidden');
+    }
+    
+    function closeRoleModal() {
+        document.getElementById('role-modal').classList.add('hidden');
+    }
+
+    function openAddUserModal() {
+        document.getElementById('add-user-modal').classList.remove('hidden');
+    }
+
+    function closeAddUserModal() {
+        document.getElementById('add-user-modal').classList.add('hidden');
+    }
+</script>
+{% endblock %}

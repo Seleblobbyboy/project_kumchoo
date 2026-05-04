@@ -1,0 +1,184 @@
+{% extends 'stadium/base.html' %}
+
+{% block header_title %}ตั้งค่าโปรไฟล์ (Profile Settings){% endblock %}
+
+{% block content %}
+<div class="flex flex-col gap-8 max-w-4xl mx-auto w-full">
+    
+    <!-- User Profile Banner -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 flex items-center gap-6">
+        <div class="relative h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 border-4 border-slate-100 shadow-sm shrink-0 overflow-hidden cursor-pointer group" onclick="document.getElementById('avatar').click();">
+            {% if request.user.profile.avatar %}
+                <img id="avatar-preview" src="{{ request.user.profile.avatar.url }}" alt="Avatar" class="absolute inset-0 w-full h-full object-cover">
+            {% else %}
+                <img id="avatar-preview" src="" alt="Avatar" class="absolute inset-0 w-full h-full object-cover hidden">
+                <i id="avatar-icon" class="fa-solid fa-user text-3xl sm:text-4xl relative z-10"></i>
+            {% endif %}
+            
+            <!-- Hover overlay -->
+            <div class="absolute inset-0 z-20 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <i class="fa-solid fa-camera text-white text-xl"></i>
+            </div>
+        </div>
+        <div class="flex flex-col">
+            <h2 class="text-xl sm:text-2xl font-black text-slate-800">{{ request.user.first_name }} {{ request.user.last_name }}</h2>
+            <div class="text-sm font-medium text-slate-500 mt-1">@{{ request.user.username }}</div>
+            {% if user_role %}
+            <div class="mt-2">
+                <span class="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-200 uppercase tracking-wider">
+                    <i class="fa-solid fa-user-shield mr-1.5"></i>{{ user_role_display }}
+                </span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Settings Forms -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Personal Information -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 flex flex-col h-full">
+            <div class="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
+                <div class="h-8 w-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <i class="fa-solid fa-id-card"></i>
+                </div>
+                <h3 class="text-lg font-black text-slate-800">ข้อมูลส่วนตัว</h3>
+            </div>
+            
+            <form method="POST" enctype="multipart/form-data" class="flex-1 flex flex-col gap-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_profile">
+                
+                <!-- Hidden File Input -->
+                <input type="file" name="avatar" id="avatar" accept="image/*" class="hidden" onchange="previewAvatar(event)">
+                
+                <div class="flex flex-col">
+                    <label for="username" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">ชื่อผู้ใช้งาน (Username)</label>
+                    <input type="text" id="username" value="{{ request.user.username }}" disabled class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-100 text-slate-500 cursor-not-allowed">
+                    <span class="text-[10px] font-medium text-slate-400 mt-1">* ไม่สามารถเปลี่ยนชื่อผู้ใช้งานได้</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col">
+                        <label for="first_name" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">ชื่อจริง</label>
+                        <input type="text" name="first_name" id="first_name" value="{{ request.user.first_name }}" placeholder="ชื่อจริง" class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="last_name" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">นามสกุล</label>
+                        <input type="text" name="last_name" id="last_name" value="{{ request.user.last_name }}" placeholder="นามสกุล" class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                    </div>
+                </div>
+
+                <div class="flex flex-col">
+                    <label for="email" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">อีเมล</label>
+                    <input type="email" name="email" id="email" value="{{ request.user.email }}" placeholder="example@email.com" class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                </div>
+
+                <div class="mt-auto pt-6">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-2.5 px-4 text-sm rounded-xl shadow-sm hover:shadow transition flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-floppy-disk"></i>
+                        บันทึกข้อมูลส่วนตัว
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Change Password -->
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 flex flex-col h-full">
+            <div class="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
+                <div class="h-8 w-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
+                    <i class="fa-solid fa-lock"></i>
+                </div>
+                <h3 class="text-lg font-black text-slate-800">เปลี่ยนรหัสผ่าน</h3>
+            </div>
+            
+            <form method="POST" class="flex-1 flex flex-col gap-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="change_password">
+                
+                <div class="flex flex-col">
+                    <label for="old_password" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">รหัสผ่านเดิม</label>
+                    <input type="password" name="old_password" id="old_password" required placeholder="••••••••" class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition">
+                </div>
+
+                <div class="flex flex-col">
+                    <label for="new_password" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">รหัสผ่านใหม่</label>
+                    <input type="password" name="new_password" id="new_password" required placeholder="••••••••" class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition">
+                </div>
+
+                <div class="flex flex-col">
+                    <label for="confirm_password" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5">ยืนยันรหัสผ่านใหม่</label>
+                    <input type="password" name="confirm_password" id="confirm_password" required placeholder="••••••••" class="px-4 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition">
+                </div>
+
+                <div class="mt-auto pt-6">
+                    <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 active:bg-black text-white font-bold py-2.5 px-4 text-sm rounded-xl shadow-sm hover:shadow transition flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-key"></i>
+                        อัปเดตรหัสผ่าน
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function previewAvatar(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Preview instantly
+    const reader = new FileReader();
+    reader.onload = function(){
+        const preview = document.getElementById('avatar-preview');
+        const icon = document.getElementById('avatar-icon');
+        
+        preview.src = reader.result;
+        preview.classList.remove('hidden');
+        if (icon) {
+            icon.classList.add('hidden');
+        }
+    };
+    reader.readAsDataURL(file);
+    
+    // Upload via AJAX
+    const formData = new FormData();
+    formData.append('action', 'update_avatar');
+    formData.append('avatar', file);
+    formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+    
+    fetch('{% url "profile_settings" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update sidebar avatar
+            const sidebarImg = document.getElementById('sidebar-avatar-img');
+            const sidebarIcon = document.getElementById('sidebar-avatar-icon');
+            if (sidebarImg) {
+                sidebarImg.src = data.avatar_url;
+                sidebarImg.classList.remove('hidden');
+            }
+            if (sidebarIcon) {
+                sidebarIcon.classList.add('hidden');
+            }
+            
+            // Optional: Show a brief success toast/notification
+            console.log('อัปโหลดรูปโปรไฟล์เรียบร้อยแล้ว');
+        } else {
+            alert('เกิดข้อผิดพลาดในการอัปโหลด: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+    });
+}
+</script>
+{% endblock %}
