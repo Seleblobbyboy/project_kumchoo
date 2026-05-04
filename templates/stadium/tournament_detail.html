@@ -46,7 +46,7 @@
                 <i class="fa-solid fa-plus"></i>
                 จัดตารางแข่งใหม่
             </button>
-            <button onclick="copyShareUrl()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 text-xs rounded-lg shadow-sm hover:shadow transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <button onclick="openShareModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 text-xs rounded-lg shadow-sm hover:shadow transition flex items-center justify-center gap-1.5 cursor-pointer">
                 <i class="fa-solid fa-share-nodes"></i>
                 แชร์ลิงก์สมัคร
             </button>
@@ -230,6 +230,62 @@
             ไม่พบข้อมูลตารางการแข่งขันในรายการนี้
         </div>
         {% endif %}
+    </div>
+</div>
+
+<!-- Share Modal -->
+<div id="share-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-30 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full p-6 animate-fade-in">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-1.5">
+                <i class="fa-solid fa-share-nodes text-indigo-600"></i>
+                แชร์ฟอร์มสมัครเข้าร่วมการแข่งขัน
+            </h3>
+            <button onclick="closeShareModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <div class="flex flex-col gap-5">
+            <!-- 1. Selection Options for mode -->
+            <div class="bg-slate-50 border border-slate-100 p-3 rounded-xl flex flex-col gap-2.5">
+                <label class="text-xs font-black text-slate-700 uppercase tracking-wide">รูปแบบการสมัคร:</label>
+                <div class="flex flex-col gap-2">
+                    <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-slate-200/60 hover:border-indigo-500 cursor-pointer transition select-none">
+                        <input type="radio" name="share_mode" value="full" checked onchange="updateShareLink()" class="text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                        <span class="text-xs font-bold text-slate-700">กรอกข้อมูลทั้งชื่อทีมและรายชื่อผู้เล่น</span>
+                    </label>
+                    <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-slate-200/60 hover:border-indigo-500 cursor-pointer transition select-none">
+                        <input type="radio" name="share_mode" value="team_only" onchange="updateShareLink()" class="text-indigo-600 focus:ring-indigo-500 border-slate-300">
+                        <span class="text-xs font-bold text-slate-700">กรอกข้อมูลเฉพาะชื่อทีม</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 2. QR Code display -->
+            <div class="flex flex-col items-center justify-center bg-slate-50 border border-slate-100 p-4 rounded-xl">
+                <span class="text-xs font-black text-slate-700 uppercase tracking-wide mb-2 self-start"><i class="fa-solid fa-qrcode text-indigo-500 mr-1"></i>คิวอาร์โค้ด:</span>
+                <div class="bg-white p-3 border border-slate-200 rounded-xl shadow-sm mb-2 select-none">
+                    <img id="share-qrcode-img" src="" alt="QR Code" class="w-36 h-36">
+                </div>
+                <p class="text-[10px] font-medium text-slate-400">สแกนเพื่อเปิดฟอร์มสมัครได้ทันที</p>
+            </div>
+
+            <!-- 3. Link display & Copy Button -->
+            <div class="flex flex-col gap-1.5">
+                <label class="text-xs font-black text-slate-700 uppercase tracking-wide">ลิงก์สำหรับแชร์:</label>
+                <div class="flex gap-2">
+                    <input type="text" id="share-link-input" readonly class="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-xs bg-slate-50 text-slate-800 select-all focus:outline-none">
+                    <button onclick="copyShareModalUrl()" class="px-3.5 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-sm hover:shadow transition flex items-center gap-1 shrink-0 cursor-pointer">
+                        <i class="fa-solid fa-copy"></i> คัดลอก
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6 flex items-center justify-end gap-2 border-t border-slate-100 pt-3.5">
+            <button type="button" onclick="closeShareModal()" class="px-4 py-2 text-xs font-semibold border border-slate-200 text-slate-600 rounded-lg bg-slate-50 hover:bg-slate-100 transition cursor-pointer">ปิดหน้าต่าง</button>
+        </div>
     </div>
 </div>
 
@@ -811,12 +867,31 @@
         document.getElementById('match-modal').classList.remove('hidden');
     }
 
-    function copyShareUrl() {
-        const url = window.location.origin + "{% url 'register_team' tournament.id %}";
+    function openShareModal() {
+        document.getElementById('share-modal').classList.remove('hidden');
+        updateShareLink();
+    }
+    function closeShareModal() {
+        document.getElementById('share-modal').classList.add('hidden');
+    }
+    function updateShareLink() {
+        const modeInput = document.querySelector('input[name="share_mode"]:checked');
+        const mode = modeInput ? modeInput.value : 'full';
+        const baseUrl = window.location.origin + "{% url 'register_team' tournament.id %}";
+        const finalUrl = baseUrl + '?mode=' + mode;
+        
+        document.getElementById('share-link-input').value = finalUrl;
+        
+        // Dynamic QR Code generation using qrserver api
+        const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(finalUrl);
+        document.getElementById('share-qrcode-img').src = qrUrl;
+    }
+    function copyShareModalUrl() {
+        const url = document.getElementById('share-link-input').value;
         navigator.clipboard.writeText(url).then(() => {
             Swal.fire({
                 title: 'คัดลอกสำเร็จ!',
-                text: 'คัดลอกลิงก์ฟอร์มสมัครเข้าร่วมการแข่งขันเรียบร้อยแล้วครับ คุณสามารถส่งลิงก์นี้ให้ผู้สมัครได้ทันที',
+                text: 'คัดลอกลิงก์เรียบร้อยแล้วครับ คุณสามารถส่งลิงก์นี้ให้ผู้สมัครได้ทันที',
                 icon: 'success',
                 confirmButtonText: 'ตกลง',
                 confirmButtonColor: '#4f46e5'
@@ -830,7 +905,7 @@
             document.body.removeChild(el);
             Swal.fire({
                 title: 'คัดลอกสำเร็จ!',
-                text: 'คัดลอกลิงก์ฟอร์มสมัครเข้าร่วมการแข่งขันเรียบร้อยแล้วครับ',
+                text: 'คัดลอกลิงก์เรียบร้อยแล้วครับ',
                 icon: 'success',
                 confirmButtonText: 'ตกลง',
                 confirmButtonColor: '#4f46e5'

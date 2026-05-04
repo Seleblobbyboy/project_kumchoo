@@ -108,7 +108,7 @@
                     </div>
 
                     <!-- Row 2: Players Dynamic Rows -->
-                    <div class="border-t border-slate-100 pt-4 mt-1">
+                    <div id="players-section" class="border-t border-slate-100 pt-4 mt-1">
                         <div class="flex items-center justify-between mb-3">
                             <label class="text-xs font-black text-slate-700 uppercase tracking-wide flex items-center gap-1">
                                 <i class="fa-solid fa-users text-orange-500 text-sm"></i>
@@ -207,10 +207,19 @@
             document.getElementById('players_json').value = JSON.stringify(players);
         }
 
-        // Add 3 default players rows on load
+        // Add 3 default players rows on load if not team_only mode
         window.addEventListener('DOMContentLoaded', () => {
-            for(let i=0; i<3; i++) {
-                addPlayerRow();
+            const params = new URLSearchParams(window.location.search);
+            const mode = params.get('mode') || 'full';
+            if (mode === 'team_only') {
+                const section = document.getElementById('players-section');
+                if (section) {
+                    section.classList.add('hidden');
+                }
+            } else {
+                for(let i=0; i<3; i++) {
+                    addPlayerRow();
+                }
             }
         });
     </script>
