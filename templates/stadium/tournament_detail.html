@@ -46,11 +46,18 @@
         </h3>
         {% if groups %}
         <div class="flex flex-wrap gap-2">
+            <!-- Show All / ดูทั้งหมด -->
+            <a href="?{% if selected_group_id %}{% endif %}" class="text-xs font-bold border shadow-sm px-4 py-2 rounded-xl flex items-center gap-1.5 transition {% if not selected_group_id %}bg-orange-500 text-white border-orange-500{% else %}bg-white text-slate-700 border-slate-200 hover:bg-slate-50{% endif %}">
+                <i class="fa-solid fa-list"></i>
+                ทั้งหมด
+            </a>
+
+            <!-- Group Filter Options -->
             {% for g in groups %}
-            <span class="text-xs font-bold bg-white text-slate-700 border border-slate-200 shadow-sm px-4 py-2 rounded-xl flex items-center gap-1.5">
-                <i class="fa-solid fa-shield-halved text-orange-500"></i>
+            <a href="?group={{ g.id }}" class="text-xs font-bold border shadow-sm px-4 py-2 rounded-xl flex items-center gap-1.5 transition {% if selected_group_id == g.id|stringformat:'s' %}bg-orange-500 text-white border-orange-500{% else %}bg-white text-slate-700 border-slate-200 hover:bg-slate-50{% endif %}">
+                <i class="fa-solid fa-shield-halved text-orange-400 {% if selected_group_id == g.id|stringformat:'s' %}text-white{% endif %}"></i>
                 {{ g.name }}
-            </span>
+            </a>
             {% endfor %}
         </div>
         {% else %}
@@ -59,6 +66,7 @@
         </div>
         {% endif %}
     </div>
+
 
     <!-- Matches Grid -->
     <div>

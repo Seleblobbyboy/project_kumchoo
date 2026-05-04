@@ -406,6 +406,14 @@ def tournament_detail(request, tournament_id):
 
     groups = tournament.groups.all()
     matches = tournament.matches.all().order_by('-match_date', '-start_time')
+    
+    selected_group_id = request.GET.get('group')
+    if selected_group_id:
+        try:
+            matches = matches.filter(group_id=int(selected_group_id))
+        except ValueError:
+            pass
+
     fields = Field.objects.all()
 
     context = {
@@ -413,8 +421,10 @@ def tournament_detail(request, tournament_id):
         'groups': groups,
         'matches': matches,
         'fields': fields,
+        'selected_group_id': selected_group_id,
     }
     return render(request, 'stadium/tournament_detail.html', context)
+
 
 
 @login_required
