@@ -308,9 +308,15 @@ def matches_list(request):
                     )
                 return redirect('matches_list')
 
+    selected_date = request.GET.get('date', '')
     matches = Match.objects.all().order_by('-match_date', '-start_time')
-    fields = Field.objects.all()
     tournaments = Tournament.objects.all().order_by('-id')
+
+    if selected_date:
+        matches = matches.filter(match_date=selected_date)
+        tournaments = tournaments.filter(start_date=selected_date)
+
+    fields = Field.objects.all()
     groups = TournamentGroup.objects.all().order_by('tournament__name', 'name')
     
     context = {
@@ -318,6 +324,7 @@ def matches_list(request):
         'fields': fields,
         'tournaments': tournaments,
         'groups': groups,
+        'selected_date': selected_date,
     }
     return render(request, 'stadium/matches_list.html', context)
 

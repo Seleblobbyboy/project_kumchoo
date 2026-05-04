@@ -20,6 +20,30 @@
         </div>
     </div>
 
+    <!-- Date Filter Form -->
+    <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fade-in">
+        <div class="flex items-center gap-2">
+            <div class="p-2.5 bg-blue-50/50 rounded-xl border border-blue-100/40 text-blue-600">
+                <i class="fa-regular fa-calendar-days text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-sm font-bold text-slate-800">ตัวกรองข้อมูลตามวันที่</h3>
+                <p class="text-xs font-medium text-slate-500 mt-0.5">กรองรายการแข่งขันและแมตช์ตามวันที่แข่งขัน</p>
+            </div>
+        </div>
+        <form method="GET" class="flex flex-wrap items-center gap-2 shrink-0">
+            <input type="date" name="date" value="{{ selected_date }}" class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+            <button type="submit" class="px-3.5 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-filter"></i> กรองข้อมูล
+            </button>
+            {% if selected_date %}
+            <a href="{% url 'matches_list' %}" class="px-3.5 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200 rounded-lg transition flex items-center gap-1 cursor-pointer">
+                <i class="fa-solid fa-rotate-left"></i> ล้างตัวกรอง
+            </a>
+            {% endif %}
+        </form>
+    </div>
+
     <!-- Tournaments Overview -->
     {% if tournaments %}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
