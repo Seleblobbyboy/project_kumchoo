@@ -44,6 +44,17 @@ class TournamentGroup(models.Model):
     def __str__(self):
         return f"{self.tournament.name} - {self.name}"
 
+class Team(models.Model):
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='teams', verbose_name="รายการแข่งขัน")
+    name = models.CharField("ชื่อทีม", max_length=100)
+    logo = models.ImageField("โลโก้ทีม / รูปทีม", upload_to='team_logos/', blank=True, null=True)
+    main_players = models.TextField("รายชื่อผู้เล่นตัวจริง", blank=True, help_text="ใส่ชื่อสมาชิกคั่นด้วยจุลภาค")
+    sub_players = models.TextField("รายชื่อผู้เล่นตัวสำรอง", blank=True, help_text="ใส่ชื่อตัวสำรองคั่นด้วยจุลภาค")
+    description = models.TextField("รายละเอียดอื่นๆ", blank=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.tournament.name})"
+
 class Match(models.Model):
     STATUS_CHOICES = [
         ('scheduled', 'รอแข่งขัน'),

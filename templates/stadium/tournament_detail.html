@@ -27,6 +27,10 @@
                 <i class="fa-solid fa-pen-to-square"></i>
                 แก้ไขข้อมูลรายการ
             </button>
+            <button onclick="openTeamModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 text-xs rounded-lg shadow-sm hover:shadow transition flex items-center justify-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-shield-halved"></i>
+                เพิ่มทีม
+            </button>
             <button onclick="openGroupModal()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2.5 px-4 text-xs rounded-lg shadow-sm hover:shadow transition flex items-center justify-center gap-1.5 cursor-pointer">
                 <i class="fa-solid fa-users-rectangle"></i>
                 เพิ่มสาย / กลุ่มการแข่ง
@@ -67,6 +71,69 @@
         {% endif %}
     </div>
 
+    <!-- Teams Section -->
+    <div>
+        <h3 class="text-sm font-black text-slate-800 mb-3 flex items-center gap-1.5">
+            <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+            ข้อมูลทีมในรายการนี้ (Teams)
+        </h3>
+        {% if teams %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+            {% for t in teams %}
+            <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm p-4 flex flex-col justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <!-- Team Logo -->
+                    <div class="w-12 h-12 rounded-lg bg-slate-50 border border-slate-200/80 overflow-hidden flex items-center justify-center shrink-0">
+                        {% if t.logo %}
+                        <img src="{{ t.logo.url }}" alt="Team logo" class="w-full h-full object-cover">
+                        {% else %}
+                        <i class="fa-solid fa-shield-halved text-slate-300 text-lg"></i>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-extrabold text-slate-800 leading-snug">{{ t.name }}</h4>
+                        {% if t.description %}
+                        <p class="text-[11px] font-medium text-slate-400 mt-0.5 line-clamp-1">{{ t.description }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Players breakdown -->
+                <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex flex-col gap-1.5 flex-1">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">ผู้เล่นตัวจริง:</span>
+                        <p class="text-xs font-semibold text-slate-600 line-clamp-2">
+                            {{ t.main_players|default:"ไม่ระบุ" }}
+                        </p>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">ผู้เล่นตัวสำรอง:</span>
+                        <p class="text-xs font-semibold text-slate-500 line-clamp-1">
+                            {{ t.sub_players|default:"ไม่ระบุ" }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Delete Team action -->
+                <div class="flex items-center justify-end">
+                    <form method="POST" onsubmit="return confirm('คุณต้องการลบทีมนี้ใช่หรือไม่?');">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete_team">
+                        <input type="hidden" name="team_id" value="{{ t.id }}">
+                        <button type="submit" class="text-xs font-bold text-red-500 hover:text-red-700 hover:bg-red-50/50 px-2.5 py-1.5 rounded transition">
+                            <i class="fa-regular fa-trash-can mr-1"></i>ลบทีม
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-white rounded-xl border border-slate-200/80 p-6 text-center text-slate-400 text-xs">
+            ยังไม่มีข้อมูลทีมในรายการนี้
+        </div>
+        {% endif %}
+    </div>
 
     <!-- Matches Grid -->
     <div>
@@ -321,7 +388,59 @@
     </div>
 </div>
 
+<!-- Add Team Modal -->
+<div id="team-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-30 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-xl max-w-lg w-full p-6 animate-fade-in max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-1.5">
+                <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+                เพิ่มข้อมูลทีม
+            </h3>
+            <button onclick="closeTeamModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create_team">
+            <div class="flex flex-col gap-3.5">
+                <div class="flex flex-col">
+                    <label for="team_name" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">ชื่อทีม</label>
+                    <input type="text" name="team_name" id="team_name" required placeholder="เช่น ทีมออลสตาร์" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                </div>
+                <div class="flex flex-col">
+                    <label for="logo" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">โลโก้ทีม / รูปทีม</label>
+                    <input type="file" name="logo" id="logo" accept="image/*" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                </div>
+                <div class="flex flex-col">
+                    <label for="main_players" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">รายชื่อผู้เล่นตัวจริง</label>
+                    <textarea name="main_players" id="main_players" rows="2" placeholder="เช่น นายเอ, นายบี" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition"></textarea>
+                </div>
+                <div class="flex flex-col">
+                    <label for="sub_players" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">รายชื่อผู้เล่นตัวสำรอง</label>
+                    <textarea name="sub_players" id="sub_players" rows="2" placeholder="เช่น นายซี, นายดี" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition"></textarea>
+                </div>
+                <div class="flex flex-col">
+                    <label for="team_desc" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">รายละเอียดอื่นๆ</label>
+                    <textarea name="description" id="team_desc" rows="2" placeholder="เช่น สังกัดทีม, ประวัติการแข่งขัน" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition"></textarea>
+                </div>
+            </div>
+            <div class="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-3.5">
+                <button type="button" onclick="closeTeamModal()" class="px-4 py-2 text-xs font-semibold border border-slate-200 text-slate-600 rounded-lg bg-slate-50 hover:bg-slate-100 transition cursor-pointer">ยกเลิก</button>
+                <button type="submit" class="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow transition cursor-pointer">บันทึก</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+    function openTeamModal() {
+        document.getElementById('team-modal').classList.remove('hidden');
+    }
+    function closeTeamModal() {
+        document.getElementById('team-modal').classList.add('hidden');
+    }
+
     function openEditTournamentModal() {
         document.getElementById('edit-tournament-modal').classList.remove('hidden');
     }

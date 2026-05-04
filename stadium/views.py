@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.utils import timezone
-from .models import Field, Booking, Match, FinancialRecord, Tournament, TournamentGroup
+from .models import Field, Booking, Match, FinancialRecord, Tournament, TournamentGroup, Team
+
 
 from django.db.models import Sum
 from datetime import datetime
@@ -404,8 +405,39 @@ def tournament_detail(request, tournament_id):
                     )
                 return redirect('tournament_detail', tournament_id=tournament.id)
 
+        # 4. Create Team
+        elif action == 'create_team':
+            team_name = request.POST.get('team_name')
+            logo = request.FILES.get('logo')
+            main_players = request.POST.get('main_players', '')
+            sub_players = request.POST.get('sub_players', '')
+            description = request.POST.get('description', '')
+
+            if team_name:
+                Team.objects.create(
+                    tournament=tournament,
+                    name=team_name,
+                    logo=logo,
+                    main_players=main_players,
+                    sub_players=sub_players,
+                    description=description
+                )
+            return redirect('tournament_detail', tournament_id=tournament.id)
+
+        # 5. Delete Team
+        elif action == 'delete_team':
+            team_id = request.POST.get('team_id')
+            if team_id:
+                try:
+                    team = Team.objects.get(id=team_id, tournament=tournament)
+                    team.delete()
+                except Team.DoesNotExist:
+                    pass
+            return redirect('tournament_detail', tournament_id=tournament.id)
+
     groups = tournament.groups.all()
     matches = tournament.matches.all().order_by('-match_date', '-start_time')
+    teams = tournament.teams.all().order_by('name')
     
     selected_group_id = request.GET.get('group')
     if selected_group_id:
@@ -421,6 +453,7 @@ def tournament_detail(request, tournament_id):
         'groups': groups,
         'matches': matches,
         'fields': fields,
+        'teams': teams,
         'selected_group_id': selected_group_id,
     }
     return render(request, 'stadium/tournament_detail.html', context)

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Field, Booking, Match, FinancialRecord, Tournament, TournamentGroup
+from .models import Field, Booking, Match, FinancialRecord, Tournament, TournamentGroup, Team
 
 @admin.register(Field)
 class FieldAdmin(admin.ModelAdmin):
@@ -23,6 +23,12 @@ class TournamentGroupAdmin(admin.ModelAdmin):
     list_filter = ('tournament',)
     search_fields = ('name',)
 
+@admin.register(Team)
+class TeamAdmin(admin.ModelAdmin):
+    list_display = ('id', 'tournament', 'name', 'main_players')
+    list_filter = ('tournament',)
+    search_fields = ('name',)
+
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
     list_display = ('title', 'tournament', 'group', 'team_a', 'team_b', 'match_date', 'start_time', 'status')
@@ -34,3 +40,4 @@ class FinancialRecordAdmin(admin.ModelAdmin):
     list_display = ('date', 'record_type', 'category', 'amount')
     list_filter = ('record_type', 'date')
     search_fields = ('category', 'description')
+
