@@ -31,6 +31,7 @@ class Booking(models.Model):
 
 class Tournament(models.Model):
     name = models.CharField("ชื่อรายการแข่งขัน", max_length=150)
+    start_date = models.DateField("วันที่เริ่มแข่งขัน", blank=True, null=True)
     description = models.TextField("รายละเอียดรายการแข่ง", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

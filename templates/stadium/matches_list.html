@@ -26,9 +26,16 @@
         {% for t in tournaments %}
         <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm p-4 flex flex-col justify-between gap-3">
             <div>
-                <span class="text-xs font-black text-blue-600 bg-blue-50/50 px-2.5 py-1 rounded-md border border-blue-100/50 uppercase tracking-wide">
-                    Tournament
-                </span>
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-black text-blue-600 bg-blue-50/50 px-2.5 py-1 rounded-md border border-blue-100/50 uppercase tracking-wide">
+                        Tournament
+                    </span>
+                    {% if t.start_date %}
+                    <span class="text-[10px] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded border border-slate-100 flex items-center gap-1">
+                        <i class="fa-regular fa-calendar"></i> {{ t.start_date|date:"d M Y" }}
+                    </span>
+                    {% endif %}
+                </div>
                 <h3 class="text-base font-extrabold text-slate-800 mt-2 leading-snug">{{ t.name }}</h3>
                 <p class="text-xs font-medium text-slate-400 mt-1 line-clamp-2">{{ t.description|default:"ไม่มีรายละเอียด" }}</p>
             </div>
@@ -168,6 +175,10 @@
                 <div class="flex flex-col">
                     <label for="tournament_name" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">ชื่อรายการแข่งขัน</label>
                     <input type="text" name="tournament_name" id="tournament_name" required placeholder="เช่น Kumchoo Cup 2026" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                </div>
+                <div class="flex flex-col">
+                    <label for="tournament_date" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">วันที่เริ่มแข่งขัน</label>
+                    <input type="date" name="tournament_date" id="tournament_date" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
                 </div>
                 <div class="flex flex-col">
                     <label for="tournament_desc" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">รายละเอียด</label>

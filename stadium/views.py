@@ -223,9 +223,10 @@ def matches_list(request):
         # 1. Create Tournament
         if action == 'create_tournament':
             name = request.POST.get('tournament_name')
+            start_date = request.POST.get('tournament_date')
             desc = request.POST.get('tournament_desc', '')
             if name:
-                Tournament.objects.create(name=name, description=desc)
+                Tournament.objects.create(name=name, start_date=start_date if start_date else None, description=desc)
             return redirect('matches_list')
             
         # 2. Create Tournament Group
@@ -334,10 +335,13 @@ def tournament_detail(request, tournament_id):
         # 1. Update Tournament Info
         if action == 'update_tournament':
             name = request.POST.get('name')
+            start_date = request.POST.get('tournament_date')
             desc = request.POST.get('description', '')
             if name:
                 tournament.name = name
                 tournament.description = desc
+                if start_date:
+                    tournament.start_date = start_date
                 tournament.save()
             return redirect('tournament_detail', tournament_id=tournament.id)
 

@@ -14,9 +14,16 @@
     <!-- Tournament Overview -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         <div>
-            <span class="text-xs font-black text-orange-600 bg-orange-50/60 px-2.5 py-1 rounded-md border border-orange-100/50 uppercase tracking-wide">
-                Tournament ID #{{ tournament.id }}
-            </span>
+            <div class="flex items-center gap-2">
+                <span class="text-xs font-black text-orange-600 bg-orange-50/60 px-2.5 py-1 rounded-md border border-orange-100/50 uppercase tracking-wide">
+                    Tournament ID #{{ tournament.id }}
+                </span>
+                {% if tournament.start_date %}
+                <span class="text-xs font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200/60 flex items-center gap-1">
+                    <i class="fa-regular fa-calendar"></i> {{ tournament.start_date|date:"d M Y" }}
+                </span>
+                {% endif %}
+            </div>
             <h2 class="text-2xl font-extrabold text-slate-800 mt-2 leading-snug">{{ tournament.name }}</h2>
             <p class="text-sm font-medium text-slate-500 mt-1">{{ tournament.description|default:"ไม่มีรายละเอียดเพิ่มเติม" }}</p>
         </div>
@@ -241,6 +248,10 @@
                 <div class="flex flex-col">
                     <label for="name" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">ชื่อรายการแข่งขัน</label>
                     <input type="text" name="name" id="name" value="{{ tournament.name }}" required class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                </div>
+                <div class="flex flex-col">
+                    <label for="edit_tournament_date" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">วันที่เริ่มแข่งขัน</label>
+                    <input type="date" name="tournament_date" id="edit_tournament_date" value="{{ tournament.start_date|date:'Y-m-d' }}" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
                 </div>
                 <div class="flex flex-col">
                     <label for="description" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">รายละเอียด</label>
