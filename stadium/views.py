@@ -465,6 +465,60 @@ def tournament_detail(request, tournament_id):
                     pass
             return redirect('tournament_detail', tournament_id=tournament.id)
 
+        # 6. Edit Team
+        elif action == 'edit_team':
+            team_id = request.POST.get('team_id')
+            team_name = request.POST.get('team_name')
+            logo = request.FILES.get('logo')
+            description = request.POST.get('description', '')
+            
+            players_json = request.POST.get('players_json', '[]')
+            players_data = players_json
+            
+            main_players_list = []
+            sub_players_list = []
+            
+            try:
+                p_list = json.loads(players_json)
+                for p in p_list:
+                    # Construct full label
+                    lbl = p.get('name', '').strip()
+                    parts = []
+                    if p.get('number'):
+                        parts.append(f"เบอร์ {p['number']}")
+                    if p.get('nickname'):
+                        parts.append(p['nickname'])
+                    
+                    if parts:
+                        lbl += f" ({' - '.join(parts)})"
+                        
+                    if p.get('role') == 'main':
+                        main_players_list.append(lbl)
+                    else:
+                        sub_players_list.append(lbl)
+            except Exception:
+                pass
+                
+            main_players = ", ".join(main_players_list)
+            sub_players = ", ".join(sub_players_list)
+
+            if team_id:
+                try:
+                    team = Team.objects.get(id=team_id, tournament=tournament)
+                    if team_name:
+                        team.name = team_name
+                    if logo:
+                        team.logo = logo
+                    team.description = description
+                    team.main_players = main_players
+                    team.sub_players = sub_players
+                    team.players_data = players_data
+                    team.save()
+                except Team.DoesNotExist:
+                    pass
+            return redirect('tournament_detail', tournament_id=tournament.id)
+
+
     groups = tournament.groups.all()
     matches = tournament.matches.all().order_by('-match_date', '-start_time')
     teams = tournament.teams.all().order_by('name')

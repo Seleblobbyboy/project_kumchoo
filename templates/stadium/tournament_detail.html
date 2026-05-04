@@ -114,13 +114,16 @@
                     </div>
                 </div>
 
-                <!-- Delete Team action -->
-                <div class="flex items-center justify-end">
+                <!-- Team actions (View/Edit & Delete) -->
+                <div class="flex items-center justify-between border-t border-slate-50 pt-2.5">
+                    <button type="button" onclick="openEditTeamModal('{{ t.id }}', '{{ t.name|escapejs }}', '{{ t.description|escapejs }}', '{{ t.logo.url|default:'' }}', '{{ t.players_data|escapejs }}')" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50/50 px-2.5 py-1.5 rounded transition cursor-pointer">
+                        <i class="fa-solid fa-pen-to-square mr-1"></i>ดู/แก้ไข
+                    </button>
                     <form method="POST" onsubmit="return confirm('คุณต้องการลบทีมนี้ใช่หรือไม่?');">
                         {% csrf_token %}
                         <input type="hidden" name="action" value="delete_team">
                         <input type="hidden" name="team_id" value="{{ t.id }}">
-                        <button type="submit" class="text-xs font-bold text-red-500 hover:text-red-700 hover:bg-red-50/50 px-2.5 py-1.5 rounded transition">
+                        <button type="submit" class="text-xs font-bold text-red-500 hover:text-red-700 hover:bg-red-50/50 px-2.5 py-1.5 rounded transition cursor-pointer">
                             <i class="fa-regular fa-trash-can mr-1"></i>ลบทีม
                         </button>
                     </form>
@@ -407,6 +410,76 @@
     </div>
 </div>
 
+<!-- Edit Team Modal -->
+<div id="edit-team-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-30 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-xl max-w-2xl w-full p-6 animate-fade-in max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-1.5">
+                <i class="fa-solid fa-pen-to-square text-emerald-600"></i>
+                แก้ไขข้อมูลทีม
+            </h3>
+            <button onclick="closeEditTeamModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+        <form method="POST" enctype="multipart/form-data" onsubmit="prepareEditPlayersJson()">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="edit_team">
+            <input type="hidden" name="team_id" id="edit_modal_team_id">
+            <input type="hidden" name="players_json" id="edit_players_json" value="[]">
+
+            <div class="flex flex-col gap-4">
+                <!-- Row: Team Logo circle & Basic Info -->
+                <div class="flex flex-col sm:flex-row gap-5 items-center">
+                    <!-- Circular avatar upload -->
+                    <div class="flex flex-col items-center gap-1.5 shrink-0">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wide">โลโก้ทีม</label>
+                        <div onclick="document.getElementById('edit-logo').click()" class="relative w-24 h-24 rounded-full border-2 border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center cursor-pointer hover:border-emerald-500 hover:shadow transition group select-none">
+                            <img id="edit-logo-preview" src="" alt="Team Logo" class="w-full h-full object-cover hidden">
+                            <div id="edit-logo-placeholder" class="flex flex-col items-center justify-center text-slate-300 group-hover:text-emerald-500 transition">
+                                <i class="fa-solid fa-camera text-2xl"></i>
+                                <span class="text-[9px] font-bold mt-1">คลิกเปลี่ยนรูป</span>
+                            </div>
+                        </div>
+                        <input type="file" name="logo" id="edit-logo" accept="image/*" class="hidden" onchange="previewEditTeamLogo(this)">
+                    </div>
+
+                    <!-- Right part: Name & Description -->
+                    <div class="flex-1 w-full flex flex-col gap-3">
+                        <div class="flex flex-col">
+                            <label for="edit_team_name" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">ชื่อทีม</label>
+                            <input type="text" name="team_name" id="edit_team_name" required placeholder="เช่น ทีมออลสตาร์" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                        </div>
+                        <div class="flex flex-col">
+                            <label for="edit_team_desc" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">รายละเอียดอื่นๆ</label>
+                            <input type="text" name="description" id="edit_team_desc" placeholder="เช่น สังกัดทีม, ประวัติการแข่งขัน" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dynamic Players List -->
+                <div class="border-t border-slate-100 pt-3">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="text-xs font-black text-slate-700 uppercase tracking-wide">รายชื่อผู้เล่นในทีม</label>
+                        <button type="button" onclick="addEditPlayerRow()" class="text-xs font-bold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-100/50 px-2.5 py-1.5 rounded-lg transition cursor-pointer flex items-center gap-1">
+                            <i class="fa-solid fa-plus"></i> เพิ่มผู้เล่น
+                        </button>
+                    </div>
+
+                    <div id="edit-players-rows-container" class="flex flex-col gap-2.5 max-h-[240px] overflow-y-auto p-1 border border-slate-50 bg-slate-50/50 rounded-xl">
+                        <!-- Dynamic rows will be inserted here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex items-center justify-end gap-2 border-t border-slate-100 pt-3.5">
+                <button type="button" onclick="closeEditTeamModal()" class="px-4 py-2 text-xs font-semibold border border-slate-200 text-slate-600 rounded-lg bg-slate-50 hover:bg-slate-100 transition cursor-pointer">ยกเลิก</button>
+                <button type="submit" class="px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow transition cursor-pointer">บันทึกการแก้ไข</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Add Team Modal -->
 <div id="team-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-30 flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-xl border border-slate-200 shadow-xl max-w-2xl w-full p-6 animate-fade-in max-h-[90vh] overflow-y-auto">
@@ -540,6 +613,112 @@
             preview.classList.add('hidden');
             placeholder.classList.remove('hidden');
         }
+    }
+
+    function previewEditTeamLogo(input) {
+        const preview = document.getElementById('edit-logo-preview');
+        const placeholder = document.getElementById('edit-logo-placeholder');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            };
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.src = '';
+            preview.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+        }
+    }
+
+    function addEditPlayerRow(name = '', number = '', nickname = '', role = 'main') {
+        const container = document.getElementById('edit-players-rows-container');
+        const rowId = 'edit-player-row-' + Date.now() + Math.floor(Math.random() * 1000);
+        
+        const rowDiv = document.createElement('div');
+        rowDiv.id = rowId;
+        rowDiv.className = 'edit-player-row flex flex-wrap sm:flex-nowrap items-center gap-2 p-2 bg-white border border-slate-200/80 rounded-lg animate-fade-in shadow-sm';
+        
+        rowDiv.innerHTML = `
+            <div class="flex-1 min-w-[120px]">
+                <input type="text" class="edit-p-name w-full px-2.5 py-1.5 border border-slate-100 rounded-md text-xs bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition" placeholder="ชื่อ-นามสกุล" value="${name}" required>
+            </div>
+            <div class="w-[80px]">
+                <input type="number" class="edit-p-number w-full px-2.5 py-1.5 border border-slate-100 rounded-md text-xs bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition" placeholder="เบอร์" value="${number}">
+            </div>
+            <div class="w-[100px]">
+                <input type="text" class="edit-p-nickname w-full px-2.5 py-1.5 border border-slate-100 rounded-md text-xs bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition" placeholder="ชื่อเล่น" value="${nickname}">
+            </div>
+            <div class="w-[110px]">
+                <select class="edit-p-role w-full px-2.5 py-1.5 border border-slate-100 rounded-md text-xs bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition">
+                    <option value="main" ${role === 'main' ? 'selected' : ''}>ตัวจริง</option>
+                    <option value="sub" ${role === 'sub' ? 'selected' : ''}>ตัวสำรอง</option>
+                </select>
+            </div>
+            <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-red-400 hover:text-red-600 p-1.5 text-sm transition cursor-pointer shrink-0">
+                <i class="fa-regular fa-trash-can"></i>
+            </button>
+        `;
+        
+        container.appendChild(rowDiv);
+    }
+
+    function prepareEditPlayersJson() {
+        const rows = document.querySelectorAll('.edit-player-row');
+        const players = [];
+        rows.forEach(row => {
+            const name = row.querySelector('.edit-p-name').value;
+            const number = row.querySelector('.edit-p-number').value;
+            const nickname = row.querySelector('.edit-p-nickname').value;
+            const role = row.querySelector('.edit-p-role').value;
+            if (name.trim()) {
+                players.push({ name, number, nickname, role });
+            }
+        });
+        document.getElementById('edit_players_json').value = JSON.stringify(players);
+    }
+
+    function openEditTeamModal(id, name, description, logoUrl, playersJson) {
+        document.getElementById('edit_modal_team_id').value = id;
+        document.getElementById('edit_team_name').value = name;
+        document.getElementById('edit_team_desc').value = description;
+
+        // Reset logo preview
+        document.getElementById('edit-logo').value = '';
+        const preview = document.getElementById('edit-logo-preview');
+        const placeholder = document.getElementById('edit-logo-placeholder');
+
+        if (logoUrl) {
+            preview.src = logoUrl;
+            preview.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+        } else {
+            preview.src = '';
+            preview.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+        }
+
+        // Parse and populate players
+        const container = document.getElementById('edit-players-rows-container');
+        container.innerHTML = '';
+        try {
+            const players = JSON.parse(playersJson || '[]');
+            if (players.length > 0) {
+                players.forEach(p => addEditPlayerRow(p.name, p.number, p.nickname, p.role));
+            } else {
+                addEditPlayerRow();
+            }
+        } catch (e) {
+            addEditPlayerRow();
+        }
+
+        document.getElementById('edit-team-modal').classList.remove('hidden');
+    }
+
+    function closeEditTeamModal() {
+        document.getElementById('edit-team-modal').classList.add('hidden');
     }
 
     function openTeamModal() {
