@@ -11,5 +11,7 @@ urlpatterns = [
     path('bookings/', views.bookings_list, name='bookings_list'),
     path('bookings/update/<int:booking_id>/', views.update_booking_status, name='update_booking_status'),
     path('matches/', views.matches_list, name='matches_list'),
+    path('tournaments/<int:tournament_id>/', views.tournament_detail, name='tournament_detail'),
     path('finances/', views.finances_list, name='finances_list'),
 ]
+

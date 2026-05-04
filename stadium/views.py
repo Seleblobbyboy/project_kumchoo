@@ -320,6 +320,104 @@ def matches_list(request):
 
 
 @login_required
+def tournament_detail(request, tournament_id):
+    try:
+        tournament = Tournament.objects.get(id=tournament_id)
+    except Tournament.DoesNotExist:
+        return redirect('matches_list')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        # 1. Update Tournament Info
+        if action == 'update_tournament':
+            name = request.POST.get('name')
+            desc = request.POST.get('description', '')
+            if name:
+                tournament.name = name
+                tournament.description = desc
+                tournament.save()
+            return redirect('tournament_detail', tournament_id=tournament.id)
+
+        # 2. Add Tournament Group
+        elif action == 'create_group':
+            group_name = request.POST.get('group_name')
+            if group_name:
+                TournamentGroup.objects.create(tournament=tournament, name=group_name)
+            return redirect('tournament_detail', tournament_id=tournament.id)
+
+        # 3. Add or Edit Match
+        elif action == 'create_match' or action == 'edit_match':
+            match_id = request.POST.get('match_id')
+            title = request.POST.get('title')
+            field_id = request.POST.get('field_id')
+            group_id = request.POST.get('group_id')
+            team_a = request.POST.get('team_a')
+            team_b = request.POST.get('team_b')
+            match_date = request.POST.get('match_date')
+            start_time = request.POST.get('start_time')
+            end_time = request.POST.get('end_time')
+            score_a = request.POST.get('score_a', 0)
+            score_b = request.POST.get('score_b', 0)
+            status = request.POST.get('status', 'scheduled')
+
+            if title and field_id and team_a and team_b and match_date:
+                field = Field.objects.get(id=field_id)
+                group = None
+                if group_id:
+                    try:
+                        group = TournamentGroup.objects.get(id=group_id)
+                    except TournamentGroup.DoesNotExist:
+                        pass
+
+                if match_id:
+                    try:
+                        match = Match.objects.get(id=match_id)
+                        match.title = title
+                        match.field = field
+                        match.group = group
+                        match.team_a = team_a
+                        match.team_b = team_b
+                        match.match_date = match_date
+                        match.start_time = start_time
+                        match.end_time = end_time
+                        match.score_a = score_a
+                        match.score_b = score_b
+                        match.status = status
+                        match.save()
+                    except Match.DoesNotExist:
+                        pass
+                else:
+                    Match.objects.create(
+                        tournament=tournament,
+                        group=group,
+                        title=title,
+                        field=field,
+                        team_a=team_a,
+                        team_b=team_b,
+                        match_date=match_date,
+                        start_time=start_time,
+                        end_time=end_time,
+                        score_a=score_a,
+                        score_b=score_b,
+                        status=status
+                    )
+                return redirect('tournament_detail', tournament_id=tournament.id)
+
+    groups = tournament.groups.all()
+    matches = tournament.matches.all().order_by('-match_date', '-start_time')
+    fields = Field.objects.all()
+
+    context = {
+        'tournament': tournament,
+        'groups': groups,
+        'matches': matches,
+        'fields': fields,
+    }
+    return render(request, 'stadium/tournament_detail.html', context)
+
+
+@login_required
 def finances_list(request):
     if request.method == 'POST':
         date = request.POST.get('date')
