@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 class Field(models.Model):
     name = models.CharField("ชื่อสนาม", max_length=100)
@@ -98,3 +99,16 @@ class FinancialRecord(models.Model):
 
     def __str__(self):
         return f"[{self.get_record_type_display()}] {self.category} - {self.amount}"
+
+
+class UserProfile(models.Model):
+    ROLE_CHOICES = [
+        ('executive', 'ผู้บริหาร'),
+        ('manager', 'ผู้จัดการ'),
+        ('referee', 'กรรมการ'),
+    ]
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    role = models.CharField("บทบาท (Role)", max_length=20, choices=ROLE_CHOICES, default='manager')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.get_role_display()}"

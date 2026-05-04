@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.utils import timezone
-from .models import Field, Booking, Match, FinancialRecord, Tournament, TournamentGroup, Team
+from .models import Field, Booking, Match, FinancialRecord, Tournament, TournamentGroup, Team, UserProfile
 
 
 import json
@@ -39,6 +39,7 @@ def register_view(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
         confirm_password = request.POST.get('confirm_password')
+        role = request.POST.get('role', 'manager')
         
         if password != confirm_password:
             messages.error(request, "รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน")
@@ -51,6 +52,10 @@ def register_view(request):
         # Create user
         user = User.objects.create_user(username=username, email=email, password=password)
         user.save()
+
+        # Create Profile
+        UserProfile.objects.create(user=user, role=role)
+
         messages.success(request, "สมัครสมาชิกสำเร็จ กรุณาเข้าสู่ระบบ")
         return redirect('login')
         

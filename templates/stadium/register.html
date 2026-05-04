@@ -53,6 +53,18 @@
                 <input type="email" name="email" id="email" required placeholder="อีเมลของคุณ" class="px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30 hover:border-slate-300 transition">
             </div>
 
+            <!-- Role -->
+            <div class="flex flex-col">
+                <label for="role" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1 flex items-center gap-1">
+                    <i class="fa-solid fa-user-tag"></i> บทบาทการใช้งาน (Role)
+                </label>
+                <select name="role" id="role" required class="px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30 hover:border-slate-300 transition cursor-pointer">
+                    <option value="executive">ผู้บริหาร</option>
+                    <option value="manager" selected>ผู้จัดการ</option>
+                    <option value="referee">กรรมการ</option>
+                </select>
+            </div>
+
             <!-- Password -->
             <div class="grid grid-cols-2 gap-3">
                 <div class="flex flex-col">
