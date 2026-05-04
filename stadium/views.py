@@ -595,3 +595,59 @@ def finances_list(request):
         'records': records,
     }
     return render(request, 'stadium/finances_list.html', context)
+
+
+def register_team(request, tournament_id):
+    try:
+        tournament = Tournament.objects.get(id=tournament_id)
+    except Tournament.DoesNotExist:
+        return redirect('dashboard')
+
+    success = False
+    if request.method == 'POST':
+        team_name = request.POST.get('team_name')
+        description = request.POST.get('description', '')
+        players_json_str = request.POST.get('players_json', '[]')
+        logo = request.FILES.get('logo')
+
+        if team_name:
+            # Parse main vs sub players plain text for legacy support
+            main_list = []
+            sub_list = []
+            try:
+                p_list = json.loads(players_json_str)
+                for p in p_list:
+                    p_name = p.get('name', '').strip()
+                    p_num = p.get('number', '').strip()
+                    p_nick = p.get('nickname', '').strip()
+                    p_role = p.get('role', 'main')
+
+                    display_str = p_name
+                    if p_num:
+                        display_str += f" (เบอร์ {p_num})"
+                    if p_nick:
+                        display_str += f" - {p_nick}"
+
+                    if p_role == 'sub':
+                        sub_list.append(display_str)
+                    else:
+                        main_list.append(display_str)
+            except json.JSONDecodeError:
+                pass
+
+            team = Team.objects.create(
+                tournament=tournament,
+                name=team_name,
+                description=description,
+                logo=logo,
+                main_players=', '.join(main_list),
+                sub_players=', '.join(sub_list),
+                players_data=players_json_str
+            )
+            success = True
+
+    context = {
+        'tournament': tournament,
+        'success': success,
+    }
+    return render(request, 'stadium/register_team.html', context)

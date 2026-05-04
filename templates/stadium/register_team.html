@@ -1,0 +1,218 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สมัครแข่งขัน - {{ tournament.name }} | Kumchoo Stadium</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- Top Navigation Bar -->
+    <header class="h-16 px-4 md:px-6 bg-white border-b border-slate-200 flex items-center justify-between shrink-0 sticky top-0 z-10 shadow-sm">
+        <div class="flex items-center space-x-3">
+            <img src="{% static 'logo.png' %}" alt="Kumchoo Stadium" class="h-9 w-9 object-contain rounded-md bg-white p-1 border border-slate-100">
+            <div>
+                <div class="text-sm font-black tracking-wider uppercase text-orange-600 leading-none">Kumchoo</div>
+                <div class="text-[10px] font-bold uppercase text-slate-400 tracking-wide mt-0.5">Stadium</div>
+            </div>
+        </div>
+        <span class="text-xs font-bold text-slate-500 bg-slate-100 py-1.5 px-3 rounded-lg border border-slate-200/60 flex items-center gap-1.5">
+            <i class="fa-solid fa-trophy text-orange-500"></i> สมัครรายการแข่งขัน
+        </span>
+    </header>
+
+    <!-- Content Area -->
+    <main class="flex-1 max-w-3xl w-full mx-auto px-4 py-8">
+        {% if success %}
+        <!-- Success Card -->
+        <div class="bg-white rounded-2xl border-2 border-emerald-100 shadow-xl p-8 text-center animate-fade-in flex flex-col items-center justify-center gap-4 max-w-md mx-auto">
+            <div class="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200/60 text-emerald-500 flex items-center justify-center text-3xl shadow-sm">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div>
+                <h2 class="text-xl font-black text-slate-800">ลงทะเบียนสำเร็จเรียบร้อยแล้ว!</h2>
+                <p class="text-sm font-medium text-slate-500 mt-1">ข้อมูลทีมของคุณได้รับการบันทึกในระบบเรียบร้อยแล้วครับ</p>
+            </div>
+            <div class="h-px bg-slate-100 w-full my-1"></div>
+            <div class="text-xs text-slate-400 font-medium">ขอบคุณที่เข้าร่วมการแข่งขันกับ Kumchoo Stadium</div>
+        </div>
+        {% else %}
+        <!-- Form Content -->
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 md:p-8 flex flex-col gap-6 animate-fade-in">
+            <!-- Header section -->
+            <div class="border-b border-slate-100 pb-5">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs font-black text-orange-600 bg-orange-50/60 px-2.5 py-1 rounded-md border border-orange-100/50 uppercase tracking-wide">
+                        Tournament ID #{{ tournament.id }}
+                    </span>
+                    {% if tournament.start_date %}
+                    <span class="text-xs font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200/60 flex items-center gap-1">
+                        <i class="fa-regular fa-calendar"></i> {{ tournament.start_date|date:"d M Y" }}
+                    </span>
+                    {% endif %}
+                </div>
+                <h2 class="text-2xl font-black text-slate-800 mt-3 leading-tight">{{ tournament.name }}</h2>
+                {% if tournament.description %}
+                <p class="text-sm font-medium text-slate-500 mt-1.5">{{ tournament.description }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Team Info Form -->
+            <form method="POST" enctype="multipart/form-data" onsubmit="preparePlayersJson()">
+                {% csrf_token %}
+                <input type="hidden" name="players_json" id="players_json" value="[]">
+
+                <div class="flex flex-col gap-6">
+                    <!-- Row 1: Logo & Name/Desc -->
+                    <div class="flex flex-col sm:flex-row gap-6 items-center">
+                        <!-- Logo Upload -->
+                        <div class="flex flex-col items-center gap-2 shrink-0">
+                            <label class="text-xs font-black text-slate-600 uppercase tracking-wide">โลโก้ทีม / รูปทีม</label>
+                            <div onclick="document.getElementById('logo').click()" class="relative w-28 h-28 rounded-full border-2 border-dashed border-slate-300 bg-slate-50 overflow-hidden flex items-center justify-center cursor-pointer hover:border-orange-500 hover:shadow transition group select-none">
+                                <img id="logo-preview" src="" alt="Team Logo" class="w-full h-full object-cover hidden">
+                                <div id="logo-placeholder" class="flex flex-col items-center justify-center text-slate-400 group-hover:text-orange-500 transition">
+                                    <i class="fa-solid fa-camera text-3xl"></i>
+                                    <span class="text-[10px] font-bold mt-1">อัปโหลดรูป</span>
+                                </div>
+                            </div>
+                            <input type="file" name="logo" id="logo" accept="image/*" class="hidden" onchange="previewTeamLogo(this)">
+                        </div>
+
+                        <!-- Basic Details -->
+                        <div class="flex-1 w-full flex flex-col gap-3.5">
+                            <div class="flex flex-col">
+                                <label for="team_name" class="text-xs font-black text-slate-600 uppercase tracking-wide mb-1 flex items-center gap-1">
+                                    ชื่อทีม <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" name="team_name" id="team_name" required placeholder="ระบุชื่อทีม" class="px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition w-full">
+                            </div>
+                            <div class="flex flex-col">
+                                <label for="description" class="text-xs font-black text-slate-600 uppercase tracking-wide mb-1">รายละเอียดอื่นๆ</label>
+                                <input type="text" name="description" id="description" placeholder="ระบุรายละเอียดเพิ่มเติม" class="px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm bg-slate-50/50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-500/30 transition w-full">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Players Dynamic Rows -->
+                    <div class="border-t border-slate-100 pt-4 mt-1">
+                        <div class="flex items-center justify-between mb-3">
+                            <label class="text-xs font-black text-slate-700 uppercase tracking-wide flex items-center gap-1">
+                                <i class="fa-solid fa-users text-orange-500 text-sm"></i>
+                                รายชื่อผู้เล่นในทีม
+                            </label>
+                            <button type="button" onclick="addPlayerRow()" class="text-xs font-bold bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-100/50 px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center gap-1">
+                                <i class="fa-solid fa-plus"></i> เพิ่มผู้เล่น
+                            </button>
+                        </div>
+
+                        <div id="players-rows-container" class="flex flex-col gap-3 max-h-[350px] overflow-y-auto p-1.5 border border-slate-50 bg-slate-50/50 rounded-xl">
+                            <!-- Rows will be dynamically created by script -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex items-center justify-end border-t border-slate-100 pt-5">
+                    <button type="submit" class="w-full sm:w-auto px-6 py-3.5 bg-orange-600 hover:bg-orange-700 text-white text-sm font-black rounded-xl shadow-lg shadow-orange-500/20 hover:shadow-orange-500/30 transition cursor-pointer flex items-center justify-center gap-2">
+                        <i class="fa-regular fa-paper-plane"></i> ส่งฟอร์มสมัครเข้าร่วมแข่งขัน
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- Simple Footer -->
+    <footer class="h-12 border-t border-slate-200/60 bg-white flex items-center justify-center text-xs text-slate-400 font-medium px-4 shrink-0">
+        Kumchoo Stadium v1.0 • ระบบลงทะเบียนออนไลน์
+    </footer>
+
+    <!-- Form Dynamic Row Builder Script -->
+    <script>
+        function previewTeamLogo(input) {
+            const preview = document.getElementById('logo-preview');
+            const placeholder = document.getElementById('logo-placeholder');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            } else {
+                preview.src = '';
+                preview.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            }
+        }
+
+        function addPlayerRow(name = '', number = '', nickname = '', role = 'main') {
+            const container = document.getElementById('players-rows-container');
+            const rowId = 'player-row-' + Date.now() + Math.floor(Math.random() * 1000);
+
+            const rowDiv = document.createElement('div');
+            rowDiv.id = rowId;
+            rowDiv.className = 'player-row flex flex-wrap sm:flex-nowrap items-center gap-2 p-2 bg-white border border-slate-200/80 rounded-xl animate-fade-in shadow-sm';
+
+            rowDiv.innerHTML = `
+                <div class="flex-1 min-w-[130px]">
+                    <input type="text" class="p-name w-full px-3 py-2 border border-slate-100 rounded-lg text-xs bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition" placeholder="ชื่อ-นามสกุล" value="${name}" required>
+                </div>
+                <div class="w-[70px]">
+                    <input type="number" class="p-number w-full px-3 py-2 border border-slate-100 rounded-lg text-xs bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition" placeholder="เบอร์" value="${number}">
+                </div>
+                <div class="w-[90px]">
+                    <input type="text" class="p-nickname w-full px-3 py-2 border border-slate-100 rounded-lg text-xs bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition" placeholder="ชื่อเล่น" value="${nickname}">
+                </div>
+                <div class="w-[100px]">
+                    <select class="p-role w-full px-2 py-2 border border-slate-100 rounded-lg text-xs bg-slate-50/60 focus:outline-none focus:ring-2 focus:ring-orange-500/20 transition">
+                        <option value="main" ${role === 'main' ? 'selected' : ''}>ตัวจริง</option>
+                        <option value="sub" ${role === 'sub' ? 'selected' : ''}>ตัวสำรอง</option>
+                    </select>
+                </div>
+                <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-red-400 hover:text-red-600 p-2 text-sm transition cursor-pointer shrink-0">
+                    <i class="fa-regular fa-trash-can"></i>
+                </button>
+            `;
+
+            container.appendChild(rowDiv);
+        }
+
+        function preparePlayersJson() {
+            const rows = document.querySelectorAll('.player-row');
+            const players = [];
+            rows.forEach(row => {
+                const name = row.querySelector('.p-name').value;
+                const number = row.querySelector('.p-number').value;
+                const nickname = row.querySelector('.p-nickname').value;
+                const role = row.querySelector('.p-role').value;
+                if (name.trim()) {
+                    players.push({ name, number, nickname, role });
+                }
+            });
+            document.getElementById('players_json').value = JSON.stringify(players);
+        }
+
+        // Add 3 default players rows on load
+        window.addEventListener('DOMContentLoaded', () => {
+            for(let i=0; i<3; i++) {
+                addPlayerRow();
+            }
+        });
+    </script>
+</body>
+</html>

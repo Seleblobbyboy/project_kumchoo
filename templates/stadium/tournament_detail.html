@@ -46,6 +46,10 @@
                 <i class="fa-solid fa-plus"></i>
                 จัดตารางแข่งใหม่
             </button>
+            <button onclick="copyShareUrl()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 text-xs rounded-lg shadow-sm hover:shadow transition flex items-center justify-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-share-nodes"></i>
+                แชร์ลิงก์สมัคร
+            </button>
         </div>
     </div>
 
@@ -805,6 +809,33 @@
         document.getElementById('modal_score_b').value = scoreB;
         document.getElementById('modal_status').value = status;
         document.getElementById('match-modal').classList.remove('hidden');
+    }
+
+    function copyShareUrl() {
+        const url = window.location.origin + "{% url 'register_team' tournament.id %}";
+        navigator.clipboard.writeText(url).then(() => {
+            Swal.fire({
+                title: 'คัดลอกสำเร็จ!',
+                text: 'คัดลอกลิงก์ฟอร์มสมัครเข้าร่วมการแข่งขันเรียบร้อยแล้วครับ คุณสามารถส่งลิงก์นี้ให้ผู้สมัครได้ทันที',
+                icon: 'success',
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#4f46e5'
+            });
+        }).catch(err => {
+            const el = document.createElement('textarea');
+            el.value = url;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            Swal.fire({
+                title: 'คัดลอกสำเร็จ!',
+                text: 'คัดลอกลิงก์ฟอร์มสมัครเข้าร่วมการแข่งขันเรียบร้อยแล้วครับ',
+                icon: 'success',
+                confirmButtonText: 'ตกลง',
+                confirmButtonColor: '#4f46e5'
+            });
+        });
     }
 </script>
 {% endblock %}
