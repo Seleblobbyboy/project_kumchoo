@@ -406,21 +406,32 @@
             <input type="hidden" name="players_json" id="players_json" value="[]">
 
             <div class="flex flex-col gap-4">
-                <!-- Row: Team Name and Logo -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div class="flex flex-col">
-                        <label for="team_name" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">ชื่อทีม</label>
-                        <input type="text" name="team_name" id="team_name" required placeholder="เช่น ทีมออลสตาร์" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                <!-- Row: Team Logo circle & Basic Info -->
+                <div class="flex flex-col sm:flex-row gap-5 items-center">
+                    <!-- Circular avatar upload -->
+                    <div class="flex flex-col items-center gap-1.5 shrink-0">
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wide">โลโก้ทีม</label>
+                        <div onclick="document.getElementById('logo').click()" class="relative w-24 h-24 rounded-full border-2 border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center cursor-pointer hover:border-emerald-500 hover:shadow transition group select-none">
+                            <img id="logo-preview" src="" alt="Team Logo" class="w-full h-full object-cover hidden">
+                            <div id="logo-placeholder" class="flex flex-col items-center justify-center text-slate-300 group-hover:text-emerald-500 transition">
+                                <i class="fa-solid fa-camera text-2xl"></i>
+                                <span class="text-[9px] font-bold mt-1">คลิกอัปโหลด</span>
+                            </div>
+                        </div>
+                        <input type="file" name="logo" id="logo" accept="image/*" class="hidden" onchange="previewTeamLogo(this)">
                     </div>
-                    <div class="flex flex-col">
-                        <label for="logo" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">โลโก้ทีม / รูปทีม</label>
-                        <input type="file" name="logo" id="logo" accept="image/*" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
-                    </div>
-                </div>
 
-                <div class="flex flex-col">
-                    <label for="team_desc" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">รายละเอียดอื่นๆ</label>
-                    <textarea name="description" id="team_desc" rows="2" placeholder="เช่น สังกัดทีม, ประวัติการแข่งขัน" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition"></textarea>
+                    <!-- Right part: Name & Description -->
+                    <div class="flex-1 w-full flex flex-col gap-3">
+                        <div class="flex flex-col">
+                            <label for="team_name" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">ชื่อทีม</label>
+                            <input type="text" name="team_name" id="team_name" required placeholder="เช่น ทีมออลสตาร์" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                        </div>
+                        <div class="flex flex-col">
+                            <label for="team_desc" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">รายละเอียดอื่นๆ</label>
+                            <input type="text" name="description" id="team_desc" placeholder="เช่น สังกัดทีม, ประวัติการแข่งขัน" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Dynamic Players List -->
@@ -494,10 +505,41 @@
         document.getElementById('players_json').value = JSON.stringify(players);
     }
 
+    function previewTeamLogo(input) {
+        const preview = document.getElementById('logo-preview');
+        const placeholder = document.getElementById('logo-placeholder');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            };
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.src = '';
+            preview.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+        }
+    }
+
     function openTeamModal() {
         document.getElementById('players-rows-container').innerHTML = '';
         // Add one default player row for initial empty view
         addPlayerRow();
+        
+        // Reset team name and desc
+        document.getElementById('team_name').value = '';
+        document.getElementById('team_desc').value = '';
+        
+        // Reset logo and preview
+        document.getElementById('logo').value = '';
+        const preview = document.getElementById('logo-preview');
+        const placeholder = document.getElementById('logo-placeholder');
+        preview.src = '';
+        preview.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        
         document.getElementById('team-modal').classList.remove('hidden');
     }
     function closeTeamModal() {
