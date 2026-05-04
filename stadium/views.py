@@ -308,13 +308,28 @@ def matches_list(request):
                     )
                 return redirect('matches_list')
 
+    from django.db.models import Q
+    search_query = request.GET.get('q', '')
     selected_date = request.GET.get('date', '')
+
     matches = Match.objects.all().order_by('-match_date', '-start_time')
     tournaments = Tournament.objects.all().order_by('-id')
 
     if selected_date:
         matches = matches.filter(match_date=selected_date)
         tournaments = tournaments.filter(start_date=selected_date)
+
+    if search_query:
+        matches = matches.filter(
+            Q(title__icontains=search_query) |
+            Q(team_a__icontains=search_query) |
+            Q(team_b__icontains=search_query) |
+            Q(tournament__name__icontains=search_query)
+        )
+        tournaments = tournaments.filter(
+            Q(name__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
 
     fields = Field.objects.all()
     groups = TournamentGroup.objects.all().order_by('tournament__name', 'name')
@@ -325,6 +340,7 @@ def matches_list(request):
         'tournaments': tournaments,
         'groups': groups,
         'selected_date': selected_date,
+        'search_query': search_query,
     }
     return render(request, 'stadium/matches_list.html', context)
 
