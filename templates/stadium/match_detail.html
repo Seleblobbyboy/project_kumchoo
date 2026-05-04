@@ -1,0 +1,191 @@
+{% extends 'stadium/base.html' %}
+
+{% block header_title %}รายละเอียดการแข่งขัน{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Header / Back Navigation -->
+    <div class="flex items-center justify-between gap-4">
+        {% if match.tournament %}
+        <a href="{% url 'tournament_detail' match.tournament.id %}" class="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white hover:bg-slate-50 border border-slate-200/80 px-4 py-2.5 rounded-xl transition shadow-sm select-none cursor-pointer">
+            <i class="fa-solid fa-arrow-left"></i> ย้อนกลับไปหน้ารายการแข่งขัน
+        </a>
+        {% else %}
+        <a href="{% url 'dashboard' %}" class="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-800 bg-white hover:bg-slate-50 border border-slate-200/80 px-4 py-2.5 rounded-xl transition shadow-sm select-none cursor-pointer">
+            <i class="fa-solid fa-arrow-left"></i> ย้อนกลับไปหน้าแรก
+        </a>
+        {% endif %}
+
+        <div class="flex items-center gap-2">
+            {% if match.status == 'live' %}
+            <span class="px-3 py-1.5 text-xs font-bold bg-red-50 text-red-600 border border-red-200/60 rounded-xl animate-pulse">กำลังแข่งขัน</span>
+            {% elif match.status == 'scheduled' %}
+            <span class="px-3 py-1.5 text-xs font-bold bg-blue-50 text-blue-600 border border-blue-200/60 rounded-xl">รอแข่งขัน</span>
+            {% elif match.status == 'completed' %}
+            <span class="px-3 py-1.5 text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200/60 rounded-xl">เสร็จสิ้น</span>
+            {% else %}
+            <span class="px-3 py-1.5 text-xs font-bold bg-slate-100 text-slate-500 border border-slate-200/60 rounded-xl">ยกเลิก</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Match Information & Main Scoreboard -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 md:p-8 flex flex-col justify-between gap-6 transition hover:shadow-md animate-fade-in">
+        <!-- Top Title & Field Details -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100/80 pb-5">
+            <div>
+                <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-xl border border-blue-100/40 uppercase tracking-wide">
+                        <i class="fa-solid fa-map-pin mr-1"></i> {{ match.field.name }}
+                    </span>
+                    {% if match.group %}
+                    <span class="text-xs font-bold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-xl border border-orange-100/40 uppercase tracking-wide">
+                        <i class="fa-solid fa-users-rectangle mr-1"></i> {{ match.group.name }}
+                    </span>
+                    {% endif %}
+                </div>
+                <h1 class="text-xl md:text-2xl font-black text-slate-800 mt-2 tracking-tight leading-tight">{{ match.title }}</h1>
+                <div class="text-xs font-semibold text-slate-400 mt-1 flex items-center gap-2">
+                    <i class="fa-regular fa-calendar text-slate-400"></i>
+                    {{ match.match_date|date:"d M Y" }}
+                    <span class="inline-block h-3 w-px bg-slate-200 mx-1"></span>
+                    <i class="fa-regular fa-clock text-slate-400"></i>
+                    {{ match.start_time|time:"H:i" }} น. - {{ match.end_time|time:"H:i" }} น.
+                </div>
+            </div>
+        </div>
+
+        <!-- Score & Cards Breakdown -->
+        <div class="grid grid-cols-1 md:grid-cols-3 items-center justify-between gap-6 md:gap-4 py-4 px-2 text-center select-none">
+            <!-- Team A -->
+            <div class="flex flex-col items-center">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">ทีมเหย้า (Home)</span>
+                <div class="w-20 h-20 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden mb-3 shadow-inner shrink-0 p-1">
+                    {% if team_a_obj.logo %}
+                    <img src="{{ team_a_obj.logo.url }}" alt="Team A Logo" class="w-full h-full object-contain rounded-xl">
+                    {% else %}
+                    <i class="fa-solid fa-shield-halved text-slate-300 text-3xl"></i>
+                    {% endif %}
+                </div>
+                <div class="text-base font-black text-slate-800 leading-snug break-words max-w-[180px]">{{ match.team_a }}</div>
+                
+                <!-- Goals / Cards -->
+                <div class="flex items-center gap-4 mt-3">
+                    <span class="flex items-center gap-1 font-bold text-slate-500 text-xs bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg">
+                        <i class="fa-solid fa-square text-yellow-400"></i> {{ match.yellow_cards_a }}
+                    </span>
+                    <span class="flex items-center gap-1 font-bold text-slate-500 text-xs bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg">
+                        <i class="fa-solid fa-square text-red-500"></i> {{ match.red_cards_a }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- VS & Scores -->
+            <div class="flex flex-col items-center justify-center">
+                <div class="flex items-center justify-center gap-5">
+                    <div class="text-5xl md:text-6xl font-black text-blue-600 bg-slate-50/50 border border-slate-200/40 shadow-inner px-6 py-4 rounded-3xl min-w-[90px] tracking-tight">
+                        {{ match.score_a }}
+                    </div>
+                    <span class="text-xs md:text-base font-black text-slate-300 tracking-widest shrink-0 uppercase select-none">VS</span>
+                    <div class="text-5xl md:text-6xl font-black text-orange-600 bg-slate-50/50 border border-slate-200/40 shadow-inner px-6 py-4 rounded-3xl min-w-[90px] tracking-tight">
+                        {{ match.score_b }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team B -->
+            <div class="flex flex-col items-center">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">ทีมเยือน (Away)</span>
+                <div class="w-20 h-20 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center overflow-hidden mb-3 shadow-inner shrink-0 p-1">
+                    {% if team_b_obj.logo %}
+                    <img src="{{ team_b_obj.logo.url }}" alt="Team B Logo" class="w-full h-full object-contain rounded-xl">
+                    {% else %}
+                    <i class="fa-solid fa-shield-halved text-slate-300 text-3xl"></i>
+                    {% endif %}
+                </div>
+                <div class="text-base font-black text-slate-800 leading-snug break-words max-w-[180px]">{{ match.team_b }}</div>
+
+                <!-- Goals / Cards -->
+                <div class="flex items-center gap-4 mt-3">
+                    <span class="flex items-center gap-1 font-bold text-slate-500 text-xs bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg">
+                        <i class="fa-solid fa-square text-yellow-400"></i> {{ match.yellow_cards_b }}
+                    </span>
+                    <span class="flex items-center gap-1 font-bold text-slate-500 text-xs bg-slate-50 border border-slate-100 px-2 py-1 rounded-lg">
+                        <i class="fa-solid fa-square text-red-500"></i> {{ match.red_cards_b }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Information Columns: Team A vs Team B Players -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in">
+        <!-- Team A Players Breakdown -->
+        <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 flex flex-col justify-between">
+            <div>
+                <h3 class="text-sm font-black text-slate-800 mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
+                    <i class="fa-solid fa-users text-blue-600"></i>
+                    รายชื่อผู้เล่น: {{ match.team_a }}
+                </h3>
+                <div class="space-y-4">
+                    {% if team_a_obj %}
+                    <div class="p-4 border border-slate-100 bg-slate-50/40 rounded-2xl flex flex-col gap-3">
+                        <div>
+                            <div class="text-xs font-black text-slate-400 uppercase tracking-wider mb-1.5">ผู้เล่นตัวจริง</div>
+                            <div class="text-sm font-bold text-slate-700 bg-white p-3 border border-slate-100 rounded-xl whitespace-pre-line leading-relaxed min-h-[50px]">
+                                {{ team_a_obj.main_players|default:"ไม่มีข้อมูลผู้เล่นตัวจริง" }}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-xs font-black text-slate-400 uppercase tracking-wider mb-1.5 mt-2">ผู้เล่นตัวสำรอง</div>
+                            <div class="text-sm font-bold text-slate-700 bg-white p-3 border border-slate-100 rounded-xl whitespace-pre-line leading-relaxed min-h-[50px]">
+                                {{ team_a_obj.sub_players|default:"ไม่มีข้อมูลผู้เล่นตัวสำรอง" }}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/40 text-slate-400 text-sm">
+                        <i class="fa-solid fa-user-slash text-2xl mb-1 text-slate-300 block"></i>
+                        ไม่มีข้อมูลผู้เล่นของทีมนี้
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Team B Players Breakdown -->
+        <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 flex flex-col justify-between">
+            <div>
+                <h3 class="text-sm font-black text-slate-800 mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
+                    <i class="fa-solid fa-users text-orange-600"></i>
+                    รายชื่อผู้เล่น: {{ match.team_b }}
+                </h3>
+                <div class="space-y-4">
+                    {% if team_b_obj %}
+                    <div class="p-4 border border-slate-100 bg-slate-50/40 rounded-2xl flex flex-col gap-3">
+                        <div>
+                            <div class="text-xs font-black text-slate-400 uppercase tracking-wider mb-1.5">ผู้เล่นตัวจริง</div>
+                            <div class="text-sm font-bold text-slate-700 bg-white p-3 border border-slate-100 rounded-xl whitespace-pre-line leading-relaxed min-h-[50px]">
+                                {{ team_b_obj.main_players|default:"ไม่มีข้อมูลผู้เล่นตัวจริง" }}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-xs font-black text-slate-400 uppercase tracking-wider mb-1.5 mt-2">ผู้เล่นตัวสำรอง</div>
+                            <div class="text-sm font-bold text-slate-700 bg-white p-3 border border-slate-100 rounded-xl whitespace-pre-line leading-relaxed min-h-[50px]">
+                                {{ team_b_obj.sub_players|default:"ไม่มีข้อมูลผู้เล่นตัวสำรอง" }}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="p-4 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/40 text-slate-400 text-sm">
+                        <i class="fa-solid fa-user-slash text-2xl mb-1 text-slate-300 block"></i>
+                        ไม่มีข้อมูลผู้เล่นของทีมนี้
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -122,78 +122,111 @@
             ตารางการแข่งขันทั้งหมด
         </h3>
         {% if matches %}
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
-            {% for m in matches %}
-            <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 flex flex-col justify-between gap-5 transition hover:shadow-md">
-                <!-- Card Top -->
-                <div class="flex items-start justify-between border-b border-slate-100 pb-2.5">
-                    <div>
-                        <div class="flex flex-wrap items-center gap-1">
-                            <span class="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100/50 uppercase tracking-wide">
-                                {{ m.field.name }}
-                            </span>
-                            {% if m.tournament %}
-                            <span class="text-xs font-semibold text-orange-600 bg-orange-50 px-2.5 py-1 rounded-md border border-orange-100/50 uppercase tracking-wide">
-                                {{ m.tournament.name }}
-                            </span>
-                            {% endif %}
-                            {% if m.group %}
-                            <span class="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200/50 uppercase tracking-wide">
-                                {{ m.group.name }}
-                            </span>
-                            {% endif %}
-                        </div>
-                        <h3 class="text-base font-bold text-slate-800 mt-2 leading-tight">{{ m.title }}</h3>
-                        <div class="text-xs font-medium text-slate-400 mt-1 flex items-center gap-1.5">
-                            <i class="fa-regular fa-calendar"></i>
-                            {{ m.match_date|date:"d M Y" }} 
-                            <span class="inline-block h-3 w-px bg-slate-200 mx-1"></span>
-                            <i class="fa-regular fa-clock"></i>
-                            {{ m.start_time|time:"H:i" }} น.
-                        </div>
-                    </div>
-                    <div>
-                        {% if m.status == 'live' %}
-                        <span class="px-2.5 py-1 text-xs font-bold bg-red-50 text-red-600 border border-red-200/60 rounded-md animate-pulse">กำลังแข่งขัน</span>
-                        {% elif m.status == 'scheduled' %}
-                        <span class="px-2.5 py-1 text-xs font-bold bg-blue-50 text-blue-600 border border-blue-200/60 rounded-md">รอแข่งขัน</span>
-                        {% elif m.status == 'completed' %}
-                        <span class="px-2.5 py-1 text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200/60 rounded-md">เสร็จสิ้น</span>
-                        {% else %}
-                        <span class="px-2.5 py-1 text-xs font-bold bg-slate-100 text-slate-500 border border-slate-200/60 rounded-md">ยกเลิก</span>
-                        {% endif %}
-                    </div>
-                </div>
+        <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden animate-fade-in">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse select-none">
+                    <thead>
+                        <tr class="bg-slate-50/60 border-b border-slate-100/80 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                            <th class="py-4 px-5">รายการ & กลุ่ม</th>
+                            <th class="py-4 px-5">ชื่องาน / แมตช์</th>
+                            <th class="py-4 px-5 text-center">ทีม A vs ทีม B</th>
+                            <th class="py-4 px-5">วันที่ & เวลา</th>
+                            <th class="py-4 px-5 text-center">สถานะ</th>
+                            <th class="py-4 px-5 text-center">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100/80">
+                        {% for m in matches %}
+                        <tr class="hover:bg-slate-50/40 transition">
+                            <!-- Tournament & Group -->
+                            <td class="py-3.5 px-5">
+                                <div class="flex flex-col gap-1.5">
+                                    {% if m.tournament %}
+                                    <span class="text-[10px] font-black text-orange-600 bg-orange-50 px-2.5 py-1 rounded-md border border-orange-100/40 self-start uppercase tracking-wide">
+                                        {{ m.tournament.name }}
+                                    </span>
+                                    {% endif %}
+                                    {% if m.group %}
+                                    <span class="text-[10px] font-bold text-slate-500 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200/40 self-start uppercase tracking-wide">
+                                        {{ m.group.name }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </td>
 
-                <!-- Card Middle: Teams & Score -->
-                <div class="flex items-center justify-between gap-3 py-1 text-center bg-slate-50/50 p-3 rounded-xl border border-slate-100/80">
-                    <div class="flex-1 flex flex-col items-center">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">ทีม A</span>
-                        <div class="text-sm font-bold text-slate-800 leading-snug truncate max-w-[120px]">{{ m.team_a }}</div>
-                        <div class="text-xl font-extrabold text-blue-600 bg-white border border-slate-200/60 shadow-sm px-4 py-0.5 rounded-lg mt-2">
-                            {{ m.score_a }}
-                        </div>
-                    </div>
+                            <!-- Title & Field -->
+                            <td class="py-3.5 px-5">
+                                <div class="flex flex-col gap-0.5">
+                                    <div class="text-sm font-bold text-slate-800">{{ m.title }}</div>
+                                    <div class="text-xs font-semibold text-blue-600 flex items-center gap-1">
+                                        <i class="fa-solid fa-map-pin"></i> {{ m.field.name }}
+                                    </div>
+                                </div>
+                            </td>
 
-                    <span class="text-xs font-extrabold text-slate-300 tracking-widest shrink-0 select-none">VS</span>
+                            <!-- Scoreboard -->
+                            <td class="py-3.5 px-5">
+                                <div class="flex items-center justify-center gap-3.5">
+                                    <!-- Team A -->
+                                    <div class="flex flex-col items-center flex-1 min-w-[70px]">
+                                        <div class="text-xs font-bold text-slate-700 leading-snug truncate max-w-[110px]">{{ m.team_a }}</div>
+                                        <div class="text-sm font-extrabold text-blue-600 bg-slate-50 border border-slate-200/60 shadow-sm px-3 py-0.5 rounded-lg mt-1">
+                                            {{ m.score_a }}
+                                        </div>
+                                    </div>
 
-                    <div class="flex-1 flex flex-col items-center">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">ทีม B</span>
-                        <div class="text-sm font-bold text-slate-800 leading-snug truncate max-w-[120px]">{{ m.team_b }}</div>
-                        <div class="text-xl font-extrabold text-orange-600 bg-white border border-slate-200/60 shadow-sm px-4 py-0.5 rounded-lg mt-2">
-                            {{ m.score_b }}
-                        </div>
-                    </div>
-                </div>
+                                    <span class="text-xs font-black text-slate-300 tracking-widest shrink-0 uppercase">VS</span>
 
-                <!-- Card Bottom -->
-                <div class="flex items-center justify-end">
-                    <button onclick="openEditMatchModal('{{ m.id }}', '{{ m.title|escapejs }}', '{{ m.field.id }}', '{{ m.tournament.id|default:'' }}', '{{ m.group.id|default:'' }}', '{{ m.team_a|escapejs }}', '{{ m.team_b|escapejs }}', '{{ m.match_date|date:'Y-m-d' }}', '{{ m.start_time|time:'H:i' }}', '{{ m.end_time|time:'H:i' }}', '{{ m.score_a }}', '{{ m.score_b }}', '{{ m.status }}')" class="text-xs font-semibold text-blue-600 bg-blue-50/60 hover:bg-blue-100 px-3 py-1.5 rounded-lg border border-blue-100/40 transition cursor-pointer">
-                        <i class="fa-regular fa-pen-to-square mr-1"></i>แก้ไขข้อมูล / อัปเดตคะแนน
-                    </button>
-                </div>
+                                    <!-- Team B -->
+                                    <div class="flex flex-col items-center flex-1 min-w-[70px]">
+                                        <div class="text-xs font-bold text-slate-700 leading-snug truncate max-w-[110px]">{{ m.team_b }}</div>
+                                        <div class="text-sm font-extrabold text-orange-600 bg-slate-50 border border-slate-200/60 shadow-sm px-3 py-0.5 rounded-lg mt-1">
+                                            {{ m.score_b }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Date / Time -->
+                            <td class="py-3.5 px-5">
+                                <div class="flex flex-col gap-1">
+                                    <div class="text-xs font-bold text-slate-700 flex items-center gap-1.5 leading-none">
+                                        <i class="fa-regular fa-calendar text-slate-400"></i>
+                                        {{ m.match_date|date:"d M Y" }}
+                                    </div>
+                                    <div class="text-xs font-semibold text-slate-400 flex items-center gap-1.5 leading-none">
+                                        <i class="fa-regular fa-clock text-slate-400"></i>
+                                        {{ m.start_time|time:"H:i" }} น.
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Status -->
+                            <td class="py-3.5 px-5 text-center">
+                                {% if m.status == 'live' %}
+                                <span class="px-2.5 py-1 text-xs font-bold bg-red-50 text-red-600 border border-red-200/60 rounded-md animate-pulse inline-block">กำลังแข่งขัน</span>
+                                {% elif m.status == 'scheduled' %}
+                                <span class="px-2.5 py-1 text-xs font-bold bg-blue-50 text-blue-600 border border-blue-200/60 rounded-md inline-block">รอแข่งขัน</span>
+                                {% elif m.status == 'completed' %}
+                                <span class="px-2.5 py-1 text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200/60 rounded-md inline-block">เสร็จสิ้น</span>
+                                {% else %}
+                                <span class="px-2.5 py-1 text-xs font-bold bg-slate-100 text-slate-500 border border-slate-200/60 rounded-md inline-block">ยกเลิก</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Actions -->
+                            <td class="py-3.5 px-5">
+                                <div class="flex items-center justify-center gap-2">
+                                    <a href="{% url 'match_detail' m.id %}" class="text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2.5 py-1.5 rounded-lg transition">
+                                        <i class="fa-solid fa-circle-info"></i> รายละเอียด
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            {% endfor %}
         </div>
         {% else %}
         <div class="bg-white rounded-xl border border-slate-200/80 p-16 text-center text-slate-400 text-sm">
@@ -312,37 +345,37 @@
                     </div>
                 </div>
 
-                <!-- Tournament & Group Options -->
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="flex flex-col">
-                        <label for="modal_tournament_id" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">รายการแข่งขัน (Tournament)</label>
-                        <select name="tournament_id" id="modal_tournament_id" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
-                            <option value="">-- ไม่สังกัดรายการแข่ง --</option>
-                            {% for t in tournaments %}
-                            <option value="{{ t.id }}">{{ t.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="flex flex-col">
-                        <label for="modal_group_id" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">สาย / กลุ่มการแข่ง</label>
-                        <select name="group_id" id="modal_group_id" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
-                            <option value="">-- ไม่ระบุสาย --</option>
-                            {% for g in groups %}
-                            <option value="{{ g.id }}">{{ g.tournament.name }} - {{ g.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                <input type="hidden" name="tournament_id" id="modal_tournament_id">
+
+                <div class="flex flex-col">
+                    <label for="modal_group_id" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">สาย / กลุ่มการแข่ง</label>
+                    <select name="group_id" id="modal_group_id" onchange="filterMatchTeamsByGroup()" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                        <option value="">-- ไม่ระบุสาย --</option>
+                        {% for g in groups %}
+                        <option value="{{ g.id }}">{{ g.name }} ({{ g.tournament.name }})</option>
+                        {% endfor %}
+                    </select>
                 </div>
 
                 <!-- Team A and Team B Names -->
                 <div class="grid grid-cols-2 gap-3">
                     <div class="flex flex-col">
                         <label for="modal_team_a" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">ทีม A (ทีมเหย้า)</label>
-                        <input type="text" name="team_a" id="modal_team_a" required placeholder="ชื่อทีม A" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                        <select name="team_a" id="modal_team_a" required onchange="filterMatchTeamsByGroup()" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                            <option value="">-- เลือกทีม A --</option>
+                            {% for t in teams %}
+                            <option value="{{ t.name }}" data-group="{{ t.group.id|default:'' }}">{{ t.name }} ({{ t.tournament.name }})</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     <div class="flex flex-col">
                         <label for="modal_team_b" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">ทีม B (ทีมเยือน)</label>
-                        <input type="text" name="team_b" id="modal_team_b" required placeholder="ชื่อทีม B" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                        <select name="team_b" id="modal_team_b" required onchange="filterMatchTeamsByGroup()" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                            <option value="">-- เลือกทีม B --</option>
+                            {% for t in teams %}
+                            <option value="{{ t.name }}" data-group="{{ t.group.id|default:'' }}">{{ t.name }} ({{ t.tournament.name }})</option>
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
 
@@ -371,6 +404,26 @@
                     <div class="flex flex-col">
                         <label for="modal_score_b" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">คะแนนทีม B</label>
                         <input type="number" name="score_b" id="modal_score_b" value="0" min="0" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                    </div>
+                </div>
+
+                <!-- Cards -->
+                <div class="grid grid-cols-4 gap-2">
+                    <div class="flex flex-col">
+                        <label for="modal_yellow_cards_a" class="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">ใบเหลือง A</label>
+                        <input type="number" name="yellow_cards_a" id="modal_yellow_cards_a" value="0" min="0" class="px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="modal_red_cards_a" class="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">ใบแดง A</label>
+                        <input type="number" name="red_cards_a" id="modal_red_cards_a" value="0" min="0" class="px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="modal_yellow_cards_b" class="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">ใบเหลือง B</label>
+                        <input type="number" name="yellow_cards_b" id="modal_yellow_cards_b" value="0" min="0" class="px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="modal_red_cards_b" class="text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">ใบแดง B</label>
+                        <input type="number" name="red_cards_b" id="modal_red_cards_b" value="0" min="0" class="px-2 py-1.5 border border-slate-200 rounded-lg text-xs bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
                     </div>
                 </div>
 
@@ -410,12 +463,47 @@
         document.getElementById('group-modal').classList.add('hidden');
     }
 
+    function filterMatchTeamsByGroup() {
+        const selectedGroup = document.getElementById('modal_group_id').value;
+        const teamASelect = document.getElementById('modal_team_a');
+        const teamBSelect = document.getElementById('modal_team_b');
+
+        if (!teamASelect || !teamBSelect || teamASelect.tagName !== 'SELECT' || teamBSelect.tagName !== 'SELECT') return;
+
+        const valA = teamASelect.value;
+        const valB = teamBSelect.value;
+
+        // Reset display of all options first
+        const filterSelect = (select, otherVal) => {
+            const options = select.querySelectorAll('option');
+            options.forEach(opt => {
+                if (!opt.value) { // The placeholder option
+                    opt.style.display = '';
+                    return;
+                }
+                const optGroup = opt.getAttribute('data-group');
+                const isMatchingGroup = !selectedGroup || optGroup === selectedGroup;
+                const isDuplicate = otherVal && opt.value === otherVal;
+
+                if (isMatchingGroup && !isDuplicate) {
+                    opt.style.display = '';
+                } else {
+                    opt.style.display = 'none';
+                }
+            });
+        };
+
+        filterSelect(teamASelect, valB);
+        filterSelect(teamBSelect, valA);
+    }
+
     function openMatchModal() {
         document.getElementById('modal-title-text').innerHTML = `<i class="fa-solid fa-futbol text-blue-600 mr-1.5"></i>จัดตารางแข่งขันใหม่`;
         document.getElementById('modal_match_id').value = '';
         document.getElementById('modal_title').value = '';
         document.getElementById('modal_tournament_id').value = '';
         document.getElementById('modal_group_id').value = '';
+        filterMatchTeamsByGroup();
         document.getElementById('modal_team_a').value = '';
         document.getElementById('modal_team_b').value = '';
         document.getElementById('modal_match_date').value = '';
@@ -423,6 +511,10 @@
         document.getElementById('modal_end_time').value = '';
         document.getElementById('modal_score_a').value = '0';
         document.getElementById('modal_score_b').value = '0';
+        document.getElementById('modal_yellow_cards_a').value = '0';
+        document.getElementById('modal_red_cards_a').value = '0';
+        document.getElementById('modal_yellow_cards_b').value = '0';
+        document.getElementById('modal_red_cards_b').value = '0';
         document.getElementById('modal_status').value = 'scheduled';
         document.getElementById('match-modal').classList.remove('hidden');
     }
@@ -430,20 +522,25 @@
         document.getElementById('match-modal').classList.add('hidden');
     }
 
-    function openEditMatchModal(id, title, fieldId, tournamentId, groupId, teamA, teamB, date, startTime, endTime, scoreA, scoreB, status) {
+    function openEditMatchModal(id, title, fieldId, tournamentId, groupId, teamA, teamB, date, startTime, endTime, scoreA, scoreB, status, yellowCardsA, yellowCardsB, redCardsA, redCardsB) {
         document.getElementById('modal-title-text').innerHTML = `<i class="fa-solid fa-pen-to-square text-orange-600 mr-1.5"></i>แก้ไขข้อมูล / อัปเดตคะแนน`;
         document.getElementById('modal_match_id').value = id;
         document.getElementById('modal_title').value = title;
         document.getElementById('modal_field_id').value = fieldId;
         document.getElementById('modal_tournament_id').value = tournamentId;
         document.getElementById('modal_group_id').value = groupId;
+        filterMatchTeamsByGroup();
         document.getElementById('modal_team_a').value = teamA;
         document.getElementById('modal_team_b').value = teamB;
         document.getElementById('modal_match_date').value = date;
         document.getElementById('modal_start_time').value = startTime;
         document.getElementById('modal_end_time').value = endTime;
-        document.getElementById('modal_score_a').value = scoreA;
-        document.getElementById('modal_score_b').value = scoreB;
+        document.getElementById('modal_score_a').value = scoreA || 0;
+        document.getElementById('modal_score_b').value = scoreB || 0;
+        document.getElementById('modal_yellow_cards_a').value = yellowCardsA || 0;
+        document.getElementById('modal_red_cards_a').value = redCardsA || 0;
+        document.getElementById('modal_yellow_cards_b').value = yellowCardsB || 0;
+        document.getElementById('modal_red_cards_b').value = redCardsB || 0;
         document.getElementById('modal_status').value = status;
         document.getElementById('match-modal').classList.remove('hidden');
     }

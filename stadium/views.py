@@ -258,7 +258,9 @@ def dashboard(request):
 @login_required
 def fields_schedule(request):
     fields = Field.objects.all()
+    tournaments = Tournament.objects.all().order_by('-id')
     selected_field_id = request.GET.get('field_id')
+    selected_tournament = request.GET.get('tournament', '')
     selected_date_str = request.GET.get('date', timezone.localdate().strftime('%Y-%m-%d'))
     
     try:
@@ -270,22 +272,65 @@ def fields_schedule(request):
     bookings = []
     matches = []
 
+    from django.db.models import Q
     if selected_field_id:
         try:
             selected_field = Field.objects.get(id=selected_field_id)
             bookings = Booking.objects.filter(field=selected_field, booking_date=selected_date).order_by('start_time')
-            matches = Match.objects.filter(field=selected_field, match_date=selected_date).order_by('start_time')
+            matches = Match.objects.filter(
+                Q(field=selected_field) & (Q(match_date=selected_date) | Q(status='live'))
+            ).order_by('start_time')
         except Field.DoesNotExist:
             pass
     elif fields.exists():
         selected_field = fields.first()
         bookings = Booking.objects.filter(field=selected_field, booking_date=selected_date).order_by('start_time')
-        matches = Match.objects.filter(field=selected_field, match_date=selected_date).order_by('start_time')
+        matches = Match.objects.filter(
+            Q(field=selected_field) & (Q(match_date=selected_date) | Q(status='live'))
+        ).order_by('start_time')
+
+    if selected_tournament:
+        matches = matches.filter(tournament_id=selected_tournament)
+
+    # Attach team logos
+    for m in matches:
+        t_a = Team.objects.filter(tournament=m.tournament, name=m.team_a).first() if m.tournament else None
+        t_b = Team.objects.filter(tournament=m.tournament, name=m.team_b).first() if m.tournament else None
+        m.team_a_logo = t_a.logo.url if t_a and t_a.logo else ''
+        m.team_b_logo = t_b.logo.url if t_b and t_b.logo else ''
+
+    if request.GET.get('ajax') == '1':
+        data = []
+        for m in matches:
+            data.append({
+                'id': m.id,
+                'title': m.title,
+                'field': m.field.name if m.field else '-',
+                'tournament': m.tournament.name if m.tournament else '-',
+                'group': m.group.name if m.group else '-',
+                'team_a': m.team_a,
+                'team_b': m.team_b,
+                'team_a_logo': m.team_a_logo,
+                'team_b_logo': m.team_b_logo,
+                'match_date': m.match_date.strftime('%d M Y') if m.match_date else '-',
+                'start_time': m.start_time.strftime('%H:%M') if m.start_time else '-',
+                'score_a': m.score_a,
+                'score_b': m.score_b,
+                'yellow_cards_a': m.yellow_cards_a,
+                'yellow_cards_b': m.yellow_cards_b,
+                'red_cards_a': m.red_cards_a,
+                'red_cards_b': m.red_cards_b,
+                'status': m.status,
+                'status_display': m.get_status_display()
+            })
+        return JsonResponse({'success': True, 'matches': data})
 
     context = {
         'fields': fields,
+        'tournaments': tournaments,
         'selected_field': selected_field,
         'selected_date': selected_date_str,
+        'selected_tournament': selected_tournament,
         'bookings': bookings,
         'matches': matches,
     }
@@ -398,6 +443,10 @@ def matches_list(request):
             end_time = request.POST.get('end_time')
             score_a = request.POST.get('score_a', 0)
             score_b = request.POST.get('score_b', 0)
+            yellow_cards_a = request.POST.get('yellow_cards_a', 0)
+            yellow_cards_b = request.POST.get('yellow_cards_b', 0)
+            red_cards_a = request.POST.get('red_cards_a', 0)
+            red_cards_b = request.POST.get('red_cards_b', 0)
             status = request.POST.get('status', 'scheduled')
 
             if title and field_id and team_a and team_b and match_date:
@@ -430,6 +479,10 @@ def matches_list(request):
                         match.end_time = end_time
                         match.score_a = score_a
                         match.score_b = score_b
+                        match.yellow_cards_a = yellow_cards_a
+                        match.yellow_cards_b = yellow_cards_b
+                        match.red_cards_a = red_cards_a
+                        match.red_cards_b = red_cards_b
                         match.status = status
                         match.save()
                     except Match.DoesNotExist:
@@ -447,6 +500,10 @@ def matches_list(request):
                         end_time=end_time,
                         score_a=score_a,
                         score_b=score_b,
+                        yellow_cards_a=yellow_cards_a,
+                        yellow_cards_b=yellow_cards_b,
+                        red_cards_a=red_cards_a,
+                        red_cards_b=red_cards_b,
                         status=status
                     )
                 return redirect('matches_list')
@@ -454,13 +511,50 @@ def matches_list(request):
     from django.db.models import Q
     search_query = request.GET.get('q', '')
     selected_date = request.GET.get('date', '')
+    selected_tournament = request.GET.get('tournament', '')
 
     matches = Match.objects.all().order_by('-match_date', '-start_time')
     tournaments = Tournament.objects.all().order_by('-id')
 
+    if request.GET.get('ajax') == '1':
+        if selected_tournament:
+            matches = matches.filter(tournament_id=selected_tournament)
+        if search_query:
+            matches = matches.filter(
+                Q(title__icontains=search_query) |
+                Q(team_a__icontains=search_query) |
+                Q(team_b__icontains=search_query) |
+                Q(tournament__name__icontains=search_query)
+            )
+        data = []
+        for m in matches:
+            data.append({
+                'id': m.id,
+                'title': m.title,
+                'field': m.field.name if m.field else '-',
+                'tournament': m.tournament.name if m.tournament else '-',
+                'group': m.group.name if m.group else '-',
+                'team_a': m.team_a,
+                'team_b': m.team_b,
+                'match_date': m.match_date.strftime('%d M Y') if m.match_date else '-',
+                'start_time': m.start_time.strftime('%H:%M') if m.start_time else '-',
+                'score_a': m.score_a,
+                'score_b': m.score_b,
+                'yellow_cards_a': m.yellow_cards_a,
+                'yellow_cards_b': m.yellow_cards_b,
+                'red_cards_a': m.red_cards_a,
+                'red_cards_b': m.red_cards_b,
+                'status': m.status,
+                'status_display': m.get_status_display()
+            })
+        return JsonResponse({'success': True, 'matches': data})
+
     if selected_date:
         matches = matches.filter(match_date=selected_date)
         tournaments = tournaments.filter(start_date=selected_date)
+
+    if selected_tournament:
+        matches = matches.filter(tournament_id=selected_tournament)
 
     if search_query:
         matches = matches.filter(
@@ -476,14 +570,17 @@ def matches_list(request):
 
     fields = Field.objects.all()
     groups = TournamentGroup.objects.all().order_by('tournament__name', 'name')
+    teams = Team.objects.all().order_by('name')
     
     context = {
         'matches': matches,
         'fields': fields,
         'tournaments': tournaments,
         'groups': groups,
+        'teams': teams,
         'selected_date': selected_date,
         'search_query': search_query,
+        'selected_tournament': selected_tournament,
     }
     return render(request, 'stadium/matches_list.html', context)
 
@@ -544,6 +641,10 @@ def tournament_detail(request, tournament_id):
             end_time = request.POST.get('end_time')
             score_a = request.POST.get('score_a', 0)
             score_b = request.POST.get('score_b', 0)
+            yellow_cards_a = request.POST.get('yellow_cards_a', 0)
+            yellow_cards_b = request.POST.get('yellow_cards_b', 0)
+            red_cards_a = request.POST.get('red_cards_a', 0)
+            red_cards_b = request.POST.get('red_cards_b', 0)
             status = request.POST.get('status', 'scheduled')
 
             if title and field_id and team_a and team_b and match_date:
@@ -568,6 +669,10 @@ def tournament_detail(request, tournament_id):
                         match.end_time = end_time
                         match.score_a = score_a
                         match.score_b = score_b
+                        match.yellow_cards_a = yellow_cards_a
+                        match.yellow_cards_b = yellow_cards_b
+                        match.red_cards_a = red_cards_a
+                        match.red_cards_b = red_cards_b
                         match.status = status
                         match.save()
                     except Match.DoesNotExist:
@@ -585,6 +690,10 @@ def tournament_detail(request, tournament_id):
                         end_time=end_time,
                         score_a=score_a,
                         score_b=score_b,
+                        yellow_cards_a=yellow_cards_a,
+                        yellow_cards_b=yellow_cards_b,
+                        red_cards_a=red_cards_a,
+                        red_cards_b=red_cards_b,
                         status=status
                     )
                 return redirect('tournament_detail', tournament_id=tournament.id)
@@ -625,9 +734,18 @@ def tournament_detail(request, tournament_id):
             main_players = ", ".join(main_players_list)
             sub_players = ", ".join(sub_players_list)
 
+            group_id = request.POST.get('group_id')
+            group = None
+            if group_id:
+                try:
+                    group = TournamentGroup.objects.get(id=group_id)
+                except TournamentGroup.DoesNotExist:
+                    pass
+
             if team_name:
                 Team.objects.create(
                     tournament=tournament,
+                    group=group,
                     name=team_name,
                     logo=logo,
                     main_players=main_players,
@@ -643,6 +761,10 @@ def tournament_detail(request, tournament_id):
             if team_id:
                 try:
                     team = Team.objects.get(id=team_id, tournament=tournament)
+                    if team.logo:
+                        old_path = os.path.join(settings.MEDIA_ROOT, team.logo.name)
+                        if os.path.isfile(old_path):
+                            os.remove(old_path)
                     team.delete()
                 except Team.DoesNotExist:
                     pass
@@ -691,7 +813,21 @@ def tournament_detail(request, tournament_id):
                     if team_name:
                         team.name = team_name
                     if logo:
+                        if team.logo:
+                            old_path = os.path.join(settings.MEDIA_ROOT, team.logo.name)
+                            if os.path.isfile(old_path):
+                                os.remove(old_path)
                         team.logo = logo
+                    
+                    group_id = request.POST.get('group_id')
+                    if group_id:
+                        try:
+                            team.group = TournamentGroup.objects.get(id=group_id)
+                        except TournamentGroup.DoesNotExist:
+                            pass
+                    else:
+                        team.group = None
+                        
                     team.description = description
                     team.main_players = main_players
                     team.sub_players = sub_players
@@ -715,6 +851,7 @@ def tournament_detail(request, tournament_id):
     if selected_group_id:
         try:
             matches = matches.filter(group_id=int(selected_group_id))
+            teams = teams.filter(group_id=int(selected_group_id))
         except ValueError:
             pass
 
@@ -815,3 +952,32 @@ def register_team(request, tournament_id):
         'success': success,
     }
     return render(request, 'stadium/register_team.html', context)
+
+
+@login_required
+def match_detail(request, match_id):
+    try:
+        match = Match.objects.get(id=match_id)
+    except Match.DoesNotExist:
+        return redirect('dashboard')
+
+    # Fetch teams in the tournament to link logos and player lists
+    teams = []
+    if match.tournament:
+        teams = Team.objects.filter(tournament=match.tournament)
+
+    # Resolve team objects
+    team_a_obj = None
+    team_b_obj = None
+    for t in teams:
+        if t.name == match.team_a:
+            team_a_obj = t
+        elif t.name == match.team_b:
+            team_b_obj = t
+
+    context = {
+        'match': match,
+        'team_a_obj': team_a_obj,
+        'team_b_obj': team_b_obj,
+    }
+    return render(request, 'stadium/match_detail.html', context)

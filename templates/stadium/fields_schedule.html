@@ -3,168 +3,451 @@
 {% block header_title %}ตารางเวลาแต่ละสนาม{% endblock %}
 
 {% block content %}
-<!-- Filtering / Selection bar -->
-<div class="bg-white rounded-xl border border-slate-200/80 shadow-sm p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-    <form method="GET" class="w-full flex flex-col sm:flex-row items-center gap-4">
-        <!-- Field dropdown -->
-        <div class="flex flex-col w-full sm:w-auto flex-1 max-w-sm">
-            <label for="field_id" class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">เลือกสนาม</label>
-            <select name="field_id" id="field_id" class="px-3 py-2 bg-slate-50 text-slate-800 border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30 hover:border-slate-300 transition">
-                {% for f in fields %}
-                <option value="{{ f.id }}" {% if f.id == selected_field.id %}selected{% endif %}>{{ f.name }} - {{ f.description }}</option>
-                {% endfor %}
-            </select>
-        </div>
+<div class="flex flex-col gap-6 max-w-7xl mx-auto w-full">
 
-        <!-- Date select -->
-        <div class="flex flex-col w-full sm:w-auto max-w-xs">
-            <label for="date" class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">เลือกวันที่</label>
-            <input type="date" name="date" id="date" value="{{ selected_date }}" class="px-3 py-2 bg-slate-50 text-slate-800 border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30 hover:border-slate-300 transition">
-        </div>
-
-        <!-- Submit btn -->
-        <div class="flex items-end self-end sm:self-auto h-full sm:mt-5">
-            <button type="submit" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-2 px-5 text-sm rounded-lg shadow-sm hover:shadow transition flex items-center justify-center gap-1.5 cursor-pointer">
-                <i class="fa-solid fa-filter text-xs"></i>
-                กรองข้อมูล
-            </button>
-        </div>
-    </form>
-</div>
-
-<!-- Main Panels for Bookings & Matches -->
-<div class="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-4">
-    <!-- Panel 1: Bookings of the selected field -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
-        <div class="flex items-center justify-between mb-5 border-b border-slate-100 pb-4">
-            <h2 class="font-black text-lg text-slate-800 flex items-center gap-2.5">
-                <i class="fa-solid fa-ticket text-blue-500"></i>
-                ตารางการจองสนาม - {{ selected_field.name }}
-            </h2>
-            <span class="text-xs bg-slate-100 text-slate-500 border border-slate-200 py-1.5 px-4 rounded-full font-bold">{{ bookings|length }} รายการ</span>
-        </div>
-
-        {% if bookings %}
-        <div class="space-y-4">
-            {% for b in bookings %}
-            <div class="p-5 border border-slate-100 bg-slate-50/60 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition hover:shadow-sm">
-                <div>
-                    <div class="text-xs font-bold text-slate-400 tracking-wider uppercase mb-1.5">เวลาแข่งขัน / ใช้งาน</div>
-                    <div class="text-lg font-extrabold text-slate-800 mb-0.5">
-                        <i class="fa-regular fa-clock mr-1 text-slate-500"></i>
-                        {{ b.start_time|time:"H:i" }} - {{ b.end_time|time:"H:i" }}
-                    </div>
-                    <div class="text-sm font-medium text-slate-600">
-                        <i class="fa-regular fa-user mr-1 text-slate-400"></i>
-                        ผู้จอง: <span class="font-bold text-slate-700">{{ b.customer_name }}</span>
-                    </div>
-                    {% if b.customer_phone %}
-                    <div class="text-xs font-medium text-slate-500 mt-1">
-                        <i class="fa-solid fa-phone mr-1 text-slate-400"></i>
-                        เบอร์โทร: {{ b.customer_phone }}
-                    </div>
-                    {% endif %}
-                </div>
-                <!-- Status/Price details -->
-                <div class="flex flex-col items-start md:items-end gap-2 shrink-0 self-stretch md:self-auto pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
-                    <span class="text-sm font-bold text-slate-800 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
-                        ฿{{ b.total_price|floatformat:2 }}
-                    </span>
-                    {% if b.payment_status == 'paid' %}
-                    <span class="text-xs font-bold px-2.5 py-1 bg-green-100 border border-green-200 text-green-700 rounded-md">
-                        ชำระเงินแล้ว
-                    </span>
-                    {% elif b.payment_status == 'pending' %}
-                    <span class="text-xs font-bold px-2.5 py-1 bg-amber-100 border border-amber-200 text-amber-700 rounded-md">
-                        รอชำระเงิน
-                    </span>
-                    {% else %}
-                    <span class="text-xs font-bold px-2.5 py-1 bg-slate-100 border border-slate-200 text-slate-600 rounded-md">
-                        ยกเลิก
-                    </span>
-                    {% endif %}
-                </div>
+    <!-- Filtering / Selection bar -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in">
+        <form method="GET" class="w-full flex flex-col sm:flex-row items-end gap-4">
+            <!-- Field dropdown -->
+            <div class="flex flex-col w-full sm:w-auto flex-1 max-w-sm">
+                <label for="field_id" class="text-xs font-black text-slate-500 uppercase tracking-wide mb-1.5">เลือกสนาม</label>
+                <select name="field_id" id="field_id" class="px-4 py-2 bg-slate-50 text-slate-800 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/30 hover:border-slate-300 transition cursor-pointer">
+                    {% for f in fields %}
+                    <option value="{{ f.id }}" {% if f.id == selected_field.id %}selected{% endif %}>{{ f.name }} - {{ f.description }}</option>
+                    {% endfor %}
+                </select>
             </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="py-14 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50/40 text-slate-400 text-sm">
-            <i class="fa-regular fa-calendar-xmark text-3xl mb-2 text-slate-300 block"></i>
-            ไม่มีรายการจองสนามในวันนี้
-        </div>
-        {% endif %}
+
+            <!-- Date select -->
+            <div class="flex flex-col w-full sm:w-auto max-w-xs">
+                <label for="date" class="text-xs font-black text-slate-500 uppercase tracking-wide mb-1.5">เลือกวันที่</label>
+                <input type="date" name="date" id="date" value="{{ selected_date }}" class="px-4 py-2 bg-slate-50 text-slate-800 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/30 hover:border-slate-300 transition">
+            </div>
+
+            <!-- Submit btn -->
+            <div class="flex items-end self-end sm:self-auto h-full w-full sm:w-auto">
+                <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-black py-2.5 px-6 text-sm rounded-xl shadow-sm hover:shadow transition flex items-center justify-center gap-2 cursor-pointer h-[42px]">
+                    <i class="fa-solid fa-filter text-xs"></i>
+                    กรองข้อมูล
+                </button>
+            </div>
+        </form>
     </div>
 
-    <!-- Panel 2: Matches of the selected field -->
-    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6">
-        <div class="flex items-center justify-between mb-5 border-b border-slate-100 pb-4">
-            <h2 class="font-black text-lg text-slate-800 flex items-center gap-2.5">
-                <i class="fa-solid fa-futbol text-orange-500"></i>
-                ตารางแข่งขันฟุตบอล - {{ selected_field.name }}
-            </h2>
-            <span class="text-xs bg-slate-100 text-slate-500 border border-slate-200 py-1.5 px-4 rounded-full font-bold">{{ matches|length }} รายการ</span>
+    <!-- Tab Switch -->
+    <div class="flex items-center gap-1.5 p-1.5 bg-slate-100 rounded-2xl border border-slate-200/60 mt-4 max-w-md select-none">
+        <button id="tab-bookings-btn" onclick="switchTab('bookings')" class="flex-1 py-2.5 px-4 text-xs sm:text-sm font-black rounded-xl text-center cursor-pointer transition-all duration-200 bg-white text-slate-800 shadow-sm border border-slate-100">
+            <i class="fa-solid fa-ticket mr-1 text-indigo-500"></i> ตารางการจองสนาม
+        </button>
+        <button id="tab-matches-btn" onclick="switchTab('matches')" class="flex-1 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl text-center cursor-pointer transition-all duration-200 text-slate-500 hover:text-slate-800">
+            <i class="fa-solid fa-futbol mr-1 text-indigo-500"></i> ตารางแข่งขันฟุตบอล
+        </button>
+    </div>
+
+    <!-- Main Panels for Bookings & Matches -->
+    <div class="mt-4">
+        
+        <!-- Panel 1: Bookings of the selected field -->
+        <div id="panel-bookings" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-5 border-b border-slate-100 pb-4">
+                    <h2 class="font-black text-lg text-slate-800 flex items-center gap-2.5">
+                        <i class="fa-solid fa-ticket text-indigo-500"></i>
+                        ตารางการจองสนาม - {{ selected_field.name }}
+                    </h2>
+                    <span class="text-xs bg-slate-100 text-slate-500 border border-slate-200 py-1.5 px-4 rounded-full font-bold">{{ bookings|length }} รายการ</span>
+                </div>
+
+                {% if bookings %}
+                <div class="space-y-4">
+                    {% for b in bookings %}
+                    <div class="p-4 border border-slate-100 bg-slate-50/60 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition hover:shadow-sm">
+                        <div>
+                            <div class="text-xs font-bold text-slate-400 tracking-wider uppercase mb-1.5">เวลาแข่งขัน / ใช้งาน</div>
+                            <div class="text-lg font-extrabold text-slate-800 mb-0.5">
+                                <i class="fa-regular fa-clock mr-1 text-slate-500"></i>
+                                {{ b.start_time|time:"H:i" }} - {{ b.end_time|time:"H:i" }}
+                            </div>
+                            <div class="text-sm font-medium text-slate-600">
+                                <i class="fa-regular fa-user mr-1 text-slate-400"></i>
+                                ผู้จอง: <span class="font-bold text-slate-700">{{ b.customer_name }}</span>
+                            </div>
+                            {% if b.customer_phone %}
+                            <div class="text-xs font-medium text-slate-500 mt-1">
+                                <i class="fa-solid fa-phone mr-1 text-slate-400"></i>
+                                เบอร์โทร: {{ b.customer_phone }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <!-- Status/Price details -->
+                        <div class="flex flex-col items-start md:items-end gap-2 shrink-0 self-stretch md:self-auto pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+                            <span class="text-sm font-bold text-slate-800 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
+                                ฿{{ b.total_price|floatformat:2 }}
+                            </span>
+                            {% if b.payment_status == 'paid' %}
+                            <span class="text-xs font-bold px-2.5 py-1 bg-green-100 border border-green-200 text-green-700 rounded-md">
+                                ชำระเงินแล้ว
+                            </span>
+                            {% elif b.payment_status == 'pending' %}
+                            <span class="text-xs font-bold px-2.5 py-1 bg-amber-100 border border-amber-200 text-amber-700 rounded-md">
+                                รอชำระเงิน
+                            </span>
+                            {% else %}
+                            <span class="text-xs font-bold px-2.5 py-1 bg-slate-100 border border-slate-200 text-slate-600 rounded-md">
+                                ยกเลิก
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="py-14 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/40 text-slate-400 text-sm">
+                    <i class="fa-regular fa-calendar-xmark text-3xl mb-2 text-slate-300 block"></i>
+                    ไม่มีรายการจองสนามในวันนี้
+                </div>
+                {% endif %}
+            </div>
         </div>
 
-        {% if matches %}
-        <div class="space-y-4">
-            {% for m in matches %}
-            <div class="p-5 border border-slate-100 bg-slate-50/60 rounded-xl flex flex-col justify-between items-stretch gap-5 transition hover:shadow-sm">
-                <!-- Title and status -->
-                <div class="flex flex-col sm:flex-row justify-between items-start gap-2 border-b border-slate-100 pb-2.5">
+        <!-- Panel 2: Matches of the selected field (OVERHAULED INTO TABLE) -->
+        <div id="panel-matches" class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 flex flex-col justify-between hidden">
+            <div>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-5 border-b border-slate-100 pb-4 gap-3">
                     <div>
-                        <div class="text-xs font-bold text-orange-500 uppercase tracking-wide mb-0.5">การแข่งแต่ละทีม</div>
-                        <h3 class="text-base font-bold text-slate-800 leading-snug">{{ m.title }}</h3>
+                        <h2 class="font-black text-lg text-slate-800 flex items-center gap-2.5">
+                            <i class="fa-solid fa-futbol text-indigo-500"></i>
+                            ตารางแข่งขันฟุตบอล
+                        </h2>
+                        <span class="text-xs font-medium text-slate-400 mt-0.5">สกอร์และใบเหลือง-ใบแดงเรียลไทม์ (สด)</span>
                     </div>
-                    <div>
-                        {% if m.status == 'live' %}
-                        <span class="px-2 py-1 text-xs font-bold bg-red-100 border border-red-200 text-red-600 rounded-md animate-pulse">กำลังแข่งขัน</span>
-                        {% elif m.status == 'scheduled' %}
-                        <span class="px-2 py-1 text-xs font-bold bg-blue-100 border border-blue-200 text-blue-600 rounded-md">รอแข่ง</span>
-                        {% elif m.status == 'completed' %}
-                        <span class="px-2 py-1 text-xs font-bold bg-slate-100 border border-slate-200 text-slate-600 rounded-md">เสร็จสิ้น</span>
-                        {% else %}
-                        <span class="px-2 py-1 text-xs font-bold bg-slate-100 border border-slate-200 text-slate-500 rounded-md">ยกเลิก</span>
-                        {% endif %}
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="openFullscreenLiveView()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-black px-3 py-2 rounded-xl transition cursor-pointer flex items-center gap-1.5 shadow">
+                            <i class="fa-solid fa-expand"></i> ดูจอเต็ม
+                        </button>
                     </div>
                 </div>
 
-                <!-- Teams and Scores -->
-                <div class="flex items-center justify-between gap-4 py-2">
-                    <!-- Team A -->
-                    <div class="flex-1 text-center flex flex-col items-center">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">ทีมเหย้า / A</span>
-                        <div class="text-base font-bold text-slate-800">{{ m.team_a }}</div>
-                        <div class="text-2xl font-extrabold text-blue-600 bg-blue-50 px-3.5 py-1 rounded-xl border border-blue-100 mt-2">
-                            {{ m.score_a }}
-                        </div>
-                    </div>
+                <!-- Tournament Filter inside Match Panel -->
+                <form method="GET" id="match-tournament-filter" class="flex flex-wrap items-center gap-3 mb-4 w-full">
+                    <!-- Maintain Field ID and Date in hidden inputs -->
+                    <input type="hidden" name="field_id" value="{{ selected_field.id }}">
+                    <input type="hidden" name="date" value="{{ selected_date }}">
 
-                    <!-- VS Divider -->
-                    <div class="text-xs font-bold uppercase text-slate-400 tracking-wider flex flex-col items-center shrink-0">
-                        <span>VS</span>
-                        <span class="text-xs text-slate-500 font-medium mt-2">
-                            {{ m.start_time|time:"H:i" }}
+                    <div class="flex flex-col w-full flex-1 min-w-[150px]">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">เลือกรายการแข่งขัน</label>
+                        <select name="tournament" id="filter-match-tournament" onchange="this.form.submit()" class="px-3 py-2 border border-slate-200 rounded-xl text-xs bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition cursor-pointer">
+                            <option value="">-- แสดงทั้งหมด --</option>
+                            {% for t in tournaments %}
+                            <option value="{{ t.id }}" {% if selected_tournament == t.id|stringformat:"s" %}selected{% endif %}>{{ t.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+
+                {% if matches %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse" id="field-matches-live-table">
+                        <thead>
+                            <tr class="bg-slate-50/60 border-b border-slate-200">
+                                <th class="px-3 py-3 text-xs font-black text-slate-500 uppercase tracking-wide">เวลา</th>
+                                <th class="px-3 py-3 text-xs font-black text-slate-500 uppercase tracking-wide">คู่แข่งขัน</th>
+                                <th class="px-3 py-3 text-xs font-black text-slate-500 uppercase tracking-wide text-center">คะแนน</th>
+                                <th class="px-3 py-3 text-xs font-black text-slate-500 uppercase tracking-wide text-center">ใบ</th>
+                                <th class="px-3 py-3 text-xs font-black text-slate-500 uppercase tracking-wide text-center">สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm" id="schedule-matches-body">
+                            {% for m in matches %}
+                            <tr class="hover:bg-slate-50/80 transition" id="match-row-{{ m.id }}">
+                                <td class="px-3 py-4">
+                                    <span class="text-xs font-bold text-slate-700 flex items-center gap-1">
+                                        <i class="fa-regular fa-clock text-slate-400"></i>
+                                        {{ m.start_time|time:"H:i" }}
+                                    </span>
+                                </td>
+                                <td class="px-3 py-4">
+                                    <div class="flex items-center gap-2 text-xs font-black text-slate-800">
+                                        <div class="flex items-center gap-1">
+                                            {% if m.team_a_logo %}
+                                            <img src="{{ m.team_a_logo }}" alt="{{ m.team_a }}" class="w-5 h-5 object-cover rounded-full border border-slate-200">
+                                            {% endif %}
+                                            <span id="team-a-{{ m.id }}">{{ m.team_a }}</span>
+                                        </div>
+                                        <span class="text-[10px] text-slate-300">VS</span>
+                                        <div class="flex items-center gap-1">
+                                            {% if m.team_b_logo %}
+                                            <img src="{{ m.team_b_logo }}" alt="{{ m.team_b }}" class="w-5 h-5 object-cover rounded-full border border-slate-200">
+                                            {% endif %}
+                                            <span id="team-b-{{ m.id }}">{{ m.team_b }}</span>
+                                        </div>
+                                    </div>
+                                    <span class="text-[10px] text-slate-400 mt-0.5 block truncate max-w-[150px]">{{ m.title }}</span>
+                                </td>
+                                <td class="px-3 py-4 text-center">
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <span class="text-sm font-black bg-indigo-50 border border-indigo-100 text-indigo-700 px-2 py-0.5 rounded-lg min-w-[28px]" id="score-a-{{ m.id }}">{{ m.score_a }}</span>
+                                        <span class="text-[10px] text-slate-400">-</span>
+                                        <span class="text-sm font-black bg-orange-50 border border-orange-100 text-orange-700 px-2 py-0.5 rounded-lg min-w-[28px]" id="score-b-{{ m.id }}">{{ m.score_b }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-3 py-4 text-center">
+                                    <div class="flex flex-col gap-0.5 items-center justify-center text-[10px]">
+                                        <span class="flex items-center gap-1 font-bold text-slate-600">
+                                            <i class="fa-solid fa-square text-yellow-400"></i>
+                                            <span id="ycards-a-{{ m.id }}">{{ m.yellow_cards_a }}</span>:<span id="ycards-b-{{ m.id }}">{{ m.yellow_cards_b }}</span>
+                                        </span>
+                                        <span class="flex items-center gap-1 font-bold text-slate-600">
+                                            <i class="fa-solid fa-square text-red-500"></i>
+                                            <span id="rcards-a-{{ m.id }}">{{ m.red_cards_a }}</span>:<span id="rcards-b-{{ m.id }}">{{ m.red_cards_b }}</span>
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="px-3 py-4 text-center">
+                                    <span class="px-2 py-0.5 text-[10px] font-black rounded-lg border border-slate-200/80 transition-all status-tag" id="status-tag-{{ m.id }}" data-status="{{ m.status }}">
+                                        {{ m.get_status_display }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="py-14 text-center border border-dashed border-slate-200 rounded-2xl bg-slate-50/40 text-slate-400 text-sm">
+                    <i class="fa-regular fa-calendar-xmark text-3xl mb-2 text-slate-300 block"></i>
+                    ไม่มีรายการแข่งขันในวันนี้
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= FULLSCREEN SCOREBOARD (MODAL) ================= -->
+<div id="fullscreen-live-view" class="fixed inset-0 bg-slate-950 z-50 p-6 hidden flex flex-col justify-between overflow-y-auto">
+    <!-- Header row of fullscreen view -->
+    <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+        <div class="flex items-center gap-3">
+            <div class="text-xs px-3 py-1 font-black bg-red-600 text-white rounded-md tracking-wider flex items-center gap-1.5">
+                <span class="flex h-2 w-2 relative">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                </span>
+                LIVE MATCHES SCREEN
+            </div>
+            <h1 class="text-xl font-extrabold text-white">ตารางสรุปผลการแข่งขันและคะแนนใบเหลือง-ใบแดง</h1>
+        </div>
+        <button onclick="closeFullscreenLiveView()" class="bg-slate-800 hover:bg-slate-700 text-white font-black p-3.5 rounded-xl transition cursor-pointer">
+            <i class="fa-solid fa-xmark text-xl"></i>
+        </button>
+    </div>
+
+    <!-- Live match score cards -->
+    <div class="flex-1 my-6 flex flex-col gap-6" id="fullscreen-matches-grid">
+        <!-- Matches are drawn here via JS -->
+    </div>
+
+    <!-- Footer row of fullscreen view -->
+    <div class="flex items-center justify-between border-t border-slate-800 pt-4 text-xs font-bold text-slate-500">
+        <div>Kumchoo Stadium - Scoreboard Terminal Mode</div>
+        <div class="flex items-center gap-2">
+            <span>อัปเดตอัตโนมัติเรียลไทม์ (3 วินาที)</span>
+            <i class="fa-solid fa-circle-notch animate-spin text-indigo-500"></i>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Refresh data using JS Polling
+    function fetchLiveMatchesData() {
+        const selectedField = "{{ selected_field.id }}";
+        const selectedDate = "{{ selected_date }}";
+        const selectedTournament = document.getElementById('filter-match-tournament').value;
+        
+        let url = `?ajax=1&field_id=${selectedField}&date=${selectedDate}`;
+        if (selectedTournament) url += `&tournament=${selectedTournament}`;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.matches) {
+                    updateMatchesTable(data.matches);
+                    if (!document.getElementById('fullscreen-live-view').classList.contains('hidden')) {
+                        updateFullscreenScoreboard(data.matches);
+                    }
+                }
+            })
+            .catch(err => console.error(err));
+    }
+
+    // Dynamic table rendering from JSON
+    function updateMatchesTable(matches) {
+        matches.forEach(m => {
+            const row = document.getElementById(`match-row-${m.id}`);
+            if (row) {
+                document.getElementById(`score-a-${m.id}`).textContent = m.score_a;
+                document.getElementById(`score-b-${m.id}`).textContent = m.score_b;
+                document.getElementById(`ycards-a-${m.id}`).textContent = m.yellow_cards_a;
+                document.getElementById(`ycards-b-${m.id}`).textContent = m.yellow_cards_b;
+                document.getElementById(`rcards-a-${m.id}`).textContent = m.red_cards_a;
+                document.getElementById(`rcards-b-${m.id}`).textContent = m.red_cards_b;
+
+                // Update status badge
+                const statusTag = document.getElementById(`status-tag-${m.id}`);
+                statusTag.textContent = m.status_display;
+                statusTag.className = "px-2 py-0.5 text-[10px] font-black rounded-lg border transition-all status-tag";
+                
+                if (m.status === 'live') {
+                    statusTag.classList.add('bg-red-50', 'text-red-600', 'border-red-200/60', 'animate-pulse');
+                } else if (m.status === 'scheduled') {
+                    statusTag.classList.add('bg-indigo-50', 'text-indigo-600', 'border-indigo-200/60');
+                } else {
+                    statusTag.classList.add('bg-slate-100', 'text-slate-600', 'border-slate-200/60');
+                }
+            }
+        });
+    }
+
+    // Dynamically draw the fullscreen Scoreboard
+    function updateFullscreenScoreboard(matches) {
+        const grid = document.getElementById('fullscreen-matches-grid');
+        grid.innerHTML = "";
+        
+        const liveMatches = matches.filter(m => m.status === 'live');
+        
+        if (liveMatches.length === 0) {
+            grid.innerHTML = `<div class="text-center text-slate-600 py-20 bg-slate-900/40 rounded-3xl border border-slate-800/80">
+                <i class="fa-solid fa-satellite-dish text-5xl mb-4 text-slate-700 block animate-pulse"></i>
+                <p class="text-lg font-black text-slate-500">ขณะนี้ยังไม่มีคู่ใดที่กำลังแข่งขันอยู่</p>
+                <p class="text-sm font-medium text-slate-600 mt-1">ผลสกอร์และใบเหลืองใบแดงจะอัปเดตแบบสดๆ เมื่อการแข่งเริ่มขึ้น</p>
+            </div>`;
+            return;
+        }
+
+        liveMatches.forEach(m => {
+            grid.innerHTML += `
+                <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl animate-fade-in flex flex-col gap-8 w-full">
+                    <!-- Top Bar: Match Info centered -->
+                    <div class="flex flex-col items-center text-center border-b border-slate-800/80 pb-6 w-full">
+                        <span class="text-xs font-black text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-4 py-1.5 rounded-xl uppercase tracking-wider mb-2">
+                            ${m.field} • ${m.tournament} • ${m.group}
                         </span>
+                        <h3 class="text-2xl font-extrabold text-white tracking-wide">${m.title}</h3>
+                        <div class="text-slate-400 text-sm font-bold mt-1.5 flex items-center gap-1.5 uppercase tracking-wide">
+                            <i class="fa-regular fa-clock"></i> ${m.start_time} น.
+                        </div>
                     </div>
 
-                    <!-- Team B -->
-                    <div class="flex-1 text-center flex flex-col items-center">
-                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">ทีมเยือน / B</span>
-                        <div class="text-base font-bold text-slate-800">{{ m.team_b }}</div>
-                        <div class="text-2xl font-extrabold text-orange-600 bg-orange-50 px-3.5 py-1 rounded-xl border border-orange-100 mt-2">
-                            {{ m.score_b }}
+                    <!-- Main Scoreboard: 3-column layout -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 items-center gap-8 w-full">
+                        <!-- Team A -->
+                        <div class="flex flex-col items-center justify-center md:items-end text-center md:text-right w-full">
+                            <span class="text-xs font-black text-slate-500 tracking-widest uppercase mb-2">TEAM A</span>
+                            <div class="flex flex-col items-center md:items-end gap-3">
+                                ${m.team_a_logo ? `<img src="${m.team_a_logo}" alt="${m.team_a}" class="w-20 h-20 object-cover rounded-full border-2 border-slate-700/80 shadow-md">` : `<div class="w-20 h-20 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-slate-600 text-3xl"><i class="fa-solid fa-shield"></i></div>`}
+                                <div class="text-2xl font-black text-white max-w-[220px] break-words">${m.team_a}</div>
+                            </div>
+                            <!-- Cards -->
+                            <div class="flex items-center gap-4 mt-4">
+                                <span class="flex items-center gap-1.5 font-extrabold text-slate-300 text-sm bg-slate-800/60 px-2.5 py-1 rounded-lg border border-slate-700/30">
+                                    <i class="fa-solid fa-square text-yellow-400 text-base"></i> ${m.yellow_cards_a}
+                                </span>
+                                <span class="flex items-center gap-1.5 font-extrabold text-slate-300 text-sm bg-slate-800/60 px-2.5 py-1 rounded-lg border border-slate-700/30">
+                                    <i class="fa-solid fa-square text-red-500 text-base"></i> ${m.red_cards_a}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Scores -->
+                        <div class="flex flex-col items-center justify-center w-full">
+                            <div class="flex items-center justify-center gap-4">
+                                <div class="text-7xl font-black text-white bg-slate-800 border border-slate-700/80 shadow-2xl px-8 py-5 rounded-3xl min-w-[110px] text-center tracking-wide select-none">
+                                    ${m.score_a}
+                                </div>
+                                <span class="text-3xl font-black text-slate-600 select-none">-</span>
+                                <div class="text-7xl font-black text-white bg-slate-800 border border-slate-700/80 shadow-2xl px-8 py-5 rounded-3xl min-w-[110px] text-center tracking-wide select-none">
+                                    ${m.score_b}
+                                </div>
+                            </div>
+                            <span class="text-sm font-black text-red-500 bg-red-500/10 border border-red-500/20 px-3 py-1 rounded-lg mt-4 animate-pulse tracking-widest uppercase">
+                                กำลังแข่งขัน
+                            </span>
+                        </div>
+
+                        <!-- Team B -->
+                        <div class="flex flex-col items-center justify-center md:items-start text-center md:text-left w-full">
+                            <span class="text-xs font-black text-slate-500 tracking-widest uppercase mb-2">TEAM B</span>
+                            <div class="flex flex-col items-center md:items-start gap-3">
+                                ${m.team_b_logo ? `<img src="${m.team_b_logo}" alt="${m.team_b}" class="w-20 h-20 object-cover rounded-full border-2 border-slate-700/80 shadow-md">` : `<div class="w-20 h-20 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center text-slate-600 text-3xl"><i class="fa-solid fa-shield"></i></div>`}
+                                <div class="text-2xl font-black text-white max-w-[220px] break-words">${m.team_b}</div>
+                            </div>
+                            <!-- Cards -->
+                            <div class="flex items-center gap-4 mt-4">
+                                <span class="flex items-center gap-1.5 font-extrabold text-slate-300 text-sm bg-slate-800/60 px-2.5 py-1 rounded-lg border border-slate-700/30">
+                                    <i class="fa-solid fa-square text-yellow-400 text-base"></i> ${m.yellow_cards_b}
+                                </span>
+                                <span class="flex items-center gap-1.5 font-extrabold text-slate-300 text-sm bg-slate-800/60 px-2.5 py-1 rounded-lg border border-slate-700/30">
+                                    <i class="fa-solid fa-square text-red-500 text-base"></i> ${m.red_cards_b}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="py-14 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50/40 text-slate-400 text-sm">
-            <i class="fa-regular fa-calendar-xmark text-3xl mb-2 text-slate-300 block"></i>
-            ไม่มีรายการแข่งขันในวันนี้
-        </div>
-        {% endif %}
-    </div>
-</div>
+            `;
+        });
+    }
+
+    // Toggle Scoreboard screen mode
+    function openFullscreenLiveView() {
+        document.getElementById('fullscreen-live-view').classList.remove('hidden');
+        fetchLiveMatchesData();
+    }
+    
+    function closeFullscreenLiveView() {
+        document.getElementById('fullscreen-live-view').classList.add('hidden');
+    }
+
+    // Polling every 3 seconds for immediate real-time synchronization
+    setInterval(fetchLiveMatchesData, 3000);
+
+    function switchTab(tab) {
+        localStorage.setItem('fields_schedule_tab', tab);
+        const bookingsBtn = document.getElementById('tab-bookings-btn');
+        const matchesBtn = document.getElementById('tab-matches-btn');
+        const bookingsPanel = document.getElementById('panel-bookings');
+        const matchesPanel = document.getElementById('panel-matches');
+
+        if (tab === 'bookings') {
+            bookingsBtn.className = "flex-1 py-2.5 px-4 text-xs sm:text-sm font-black rounded-xl text-center cursor-pointer transition-all duration-200 bg-white text-slate-800 shadow-sm border border-slate-100";
+            matchesBtn.className = "flex-1 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl text-center cursor-pointer transition-all duration-200 text-slate-500 hover:text-slate-800";
+            
+            bookingsPanel.classList.remove('hidden');
+            matchesPanel.classList.add('hidden');
+        } else {
+            matchesBtn.className = "flex-1 py-2.5 px-4 text-xs sm:text-sm font-black rounded-xl text-center cursor-pointer transition-all duration-200 bg-white text-slate-800 shadow-sm border border-slate-100";
+            bookingsBtn.className = "flex-1 py-2.5 px-4 text-xs sm:text-sm font-bold rounded-xl text-center cursor-pointer transition-all duration-200 text-slate-500 hover:text-slate-800";
+            
+            bookingsPanel.classList.add('hidden');
+            matchesPanel.classList.remove('hidden');
+        }
+    }
+
+    // Initial tags styling and active tab restoration
+    document.addEventListener('DOMContentLoaded', () => {
+        const activeTab = localStorage.getItem('fields_schedule_tab') || 'bookings';
+        switchTab(activeTab);
+
+        document.querySelectorAll('.status-tag').forEach(tag => {
+            const st = tag.getAttribute('data-status');
+            if (st === 'live') {
+                tag.className = "px-2 py-0.5 text-[10px] font-black bg-red-50 text-red-600 border border-red-200/60 rounded-lg animate-pulse tracking-wide";
+            } else if (st === 'scheduled') {
+                tag.className = "px-2 py-0.5 text-[10px] font-black bg-indigo-50 text-indigo-600 border border-indigo-200/60 rounded-lg tracking-wide";
+            } else {
+                tag.className = "px-2 py-0.5 text-[10px] font-black bg-slate-100 text-slate-600 border border-slate-200/60 rounded-lg tracking-wide";
+            }
+        });
+    });
+</script>
 {% endblock %}

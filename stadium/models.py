@@ -46,10 +46,14 @@ class TournamentGroup(models.Model):
     def __str__(self):
         return f"{self.tournament.name} - {self.name}"
 
+def team_directory_path(instance, filename):
+    return f'team_logos/tournament_{instance.tournament.id}/{filename}'
+
 class Team(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name='teams', verbose_name="รายการแข่งขัน")
+    group = models.ForeignKey(TournamentGroup, on_delete=models.SET_NULL, related_name='teams', verbose_name="สายการแข่ง", blank=True, null=True)
     name = models.CharField("ชื่อทีม", max_length=100)
-    logo = models.ImageField("โลโก้ทีม / รูปทีม", upload_to='team_logos/', blank=True, null=True)
+    logo = models.ImageField("โลโก้ทีม / รูปทีม", upload_to=team_directory_path, blank=True, null=True)
     main_players = models.TextField("รายชื่อผู้เล่นตัวจริง", blank=True, help_text="ใส่ชื่อสมาชิกคั่นด้วยจุลภาค")
     sub_players = models.TextField("รายชื่อผู้เล่นตัวสำรอง", blank=True, help_text="ใส่ชื่อตัวสำรองคั่นด้วยจุลภาค")
     players_data = models.TextField("ข้อมูลผู้เล่นทั้งหมด (JSON)", blank=True, default="[]")
@@ -79,6 +83,12 @@ class Match(models.Model):
     # Scores
     score_a = models.IntegerField("คะแนนทีม A", default=0)
     score_b = models.IntegerField("คะแนนทีม B", default=0)
+
+    # Cards
+    yellow_cards_a = models.IntegerField("ใบเหลืองทีม A", default=0)
+    yellow_cards_b = models.IntegerField("ใบเหลืองทีม B", default=0)
+    red_cards_a = models.IntegerField("ใบแดงทีม A", default=0)
+    red_cards_b = models.IntegerField("ใบแดงทีม B", default=0)
     
     status = models.CharField("สถานะการแข่ง", max_length=20, choices=STATUS_CHOICES, default='scheduled')
 
