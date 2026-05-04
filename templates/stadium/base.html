@@ -1,0 +1,117 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kumchoo Stadium - ระบบจัดการสนามฟุตบอล</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col md:flex-row">
+
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="w-full md:w-64 bg-slate-900 text-white flex flex-col justify-between shrink-0 border-r border-slate-800">
+        <div class="flex flex-col">
+            <!-- Header Brand / Logo -->
+            <div class="p-5 flex items-center justify-center border-b border-slate-800 bg-slate-950/40">
+                <a href="{% url 'dashboard' %}" class="flex items-center space-x-3">
+                    <img src="{% static 'logo.png' %}" alt="Kumchoo Stadium" class="h-10 w-10 object-contain rounded-md bg-white p-1">
+                    <div>
+                        <div class="text-sm font-bold tracking-wider uppercase text-orange-500 leading-tight">Kumchoo</div>
+                        <div class="text-xs font-semibold uppercase text-slate-400 tracking-wide">Stadium</div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="p-4 flex flex-col gap-1.5 text-sm font-medium">
+                <a href="{% url 'dashboard' %}" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-800 transition {% if request.resolver_match.url_name == 'dashboard' %}bg-blue-600/20 text-blue-400 border border-blue-500/30{% else %}text-slate-300 hover:text-white{% endif %}">
+                    <i class="fa-solid fa-chart-pie w-5 text-center"></i>
+                    <span>แดชบอร์ด</span>
+                </a>
+                <a href="{% url 'fields_schedule' %}" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-800 transition {% if request.resolver_match.url_name == 'fields_schedule' %}bg-blue-600/20 text-blue-400 border border-blue-500/30{% else %}text-slate-300 hover:text-white{% endif %}">
+                    <i class="fa-solid fa-calendar-days w-5 text-center"></i>
+                    <span>ตารางเวลาแต่ละสนาม</span>
+                </a>
+                <a href="{% url 'bookings_list' %}" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-800 transition {% if request.resolver_match.url_name == 'bookings_list' %}bg-blue-600/20 text-blue-400 border border-blue-500/30{% else %}text-slate-300 hover:text-white{% endif %}">
+                    <i class="fa-solid fa-ticket w-5 text-center"></i>
+                    <span>การจองสนาม</span>
+                </a>
+                <a href="{% url 'matches_list' %}" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-800 transition {% if request.resolver_match.url_name == 'matches_list' %}bg-blue-600/20 text-blue-400 border border-blue-500/30{% else %}text-slate-300 hover:text-white{% endif %}">
+                    <i class="fa-solid fa-futbol w-5 text-center"></i>
+                    <span>การแข่งแต่ละทีม</span>
+                </a>
+                <a href="{% url 'finances_list' %}" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-800 transition {% if request.resolver_match.url_name == 'finances_list' %}bg-blue-600/20 text-blue-400 border border-blue-500/30{% else %}text-slate-300 hover:text-white{% endif %}">
+                    <i class="fa-solid fa-wallet w-5 text-center"></i>
+                    <span>การเงิน</span>
+                </a>
+                
+                <div class="h-px bg-slate-800 my-2"></div>
+                
+                <a href="{% url 'logout' %}" class="flex items-center space-x-3 p-3 rounded-lg hover:bg-red-600/20 text-red-400 border border-transparent hover:border-red-500/30 transition">
+                    <i class="fa-solid fa-right-from-bracket w-5 text-center"></i>
+                    <span>ออกจากระบบ</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Sidebar footer -->
+        <div class="p-4 border-t border-slate-800 text-xs text-slate-500 text-center select-none bg-slate-950/20">
+            ระบบบริหารจัดการสนามฟุตบอล<br>
+            Kumchoo Stadium v1.0
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="flex-1 flex flex-col bg-slate-50 min-w-0 overflow-y-auto">
+        <!-- TOP NAVIGATION BAR -->
+        <header class="h-16 px-6 bg-white border-b border-slate-200 flex items-center justify-between shrink-0 sticky top-0 z-10">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-bars md:hidden text-lg text-slate-600 mr-2 cursor-pointer" onclick="toggleSidebar()"></i>
+                <h1 class="text-lg font-bold text-slate-800 tracking-tight flex items-center">
+                    {% block header_title %}หน้าหลัก{% endblock %}
+                </h1>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                <span class="text-xs text-slate-600 bg-slate-100 py-1.5 px-3 rounded-lg border border-slate-200 font-bold hidden sm:inline-block">
+                    <i class="fa-regular fa-user mr-1 text-slate-500"></i>
+                    สวัสดี, {{ request.user.username }}
+                </span>
+                <span class="text-xs text-slate-500 bg-slate-100 py-1.5 px-3 rounded-lg border border-slate-200 font-medium">
+                    <i class="fa-regular fa-clock mr-1.5"></i>
+                    {% now "d M Y" %}
+                </span>
+            </div>
+        </header>
+
+        <!-- Dynamic Content Body -->
+        <div class="p-6 flex-1 flex flex-col gap-6">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+    <!-- Simple Sidebar Toggler Script -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.querySelector('aside');
+            sidebar.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>

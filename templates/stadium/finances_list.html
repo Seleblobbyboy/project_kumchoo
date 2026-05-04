@@ -1,0 +1,147 @@
+{% extends 'stadium/base.html' %}
+
+{% block header_title %}การเงินและการบัญชี{% endblock %}
+
+{% block content %}
+<!-- Top Toolbar with Metric Summary Cards -->
+<div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+    <div class="flex flex-col">
+        <p class="text-sm font-medium text-slate-500">จัดการรายรับ-รายจ่าย ทั้งค่าจองสนามและค่าใช้จ่ายทั่วไป</p>
+    </div>
+
+    <!-- Action button -->
+    <button onclick="openFinanceModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 text-xs rounded-lg shadow-sm hover:shadow transition flex items-center justify-center gap-1.5 cursor-pointer">
+        <i class="fa-solid fa-plus"></i>
+        บันทึกรายการใหม่
+    </button>
+</div>
+
+<!-- Main Panels / Table -->
+<div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <h2 class="font-bold text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-indigo-500"></i>
+            รายการเงินเข้า-ออกทั้งหมด
+        </h2>
+        <span class="text-xs bg-slate-100 text-slate-500 border border-slate-200 py-1 px-3 rounded-full font-semibold">{{ records|length }} รายการ</span>
+    </div>
+
+    {% if records %}
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-slate-600">
+            <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-100">
+                <tr>
+                    <th class="px-5 py-3">วันที่</th>
+                    <th class="px-5 py-3">ประเภทรายการ</th>
+                    <th class="px-5 py-3">หมวดหมู่</th>
+                    <th class="px-5 py-3">รายละเอียด</th>
+                    <th class="px-5 py-3">จำนวนเงิน (บาท)</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                {% for r in records %}
+                <tr class="hover:bg-slate-50/50 transition">
+                    <td class="px-5 py-4 font-medium text-slate-500">{{ r.date|date:"d M Y" }}</td>
+                    <td class="px-5 py-4">
+                        {% if r.record_type == 'income' %}
+                        <span class="px-2.5 py-1 text-xs font-bold bg-green-50 text-green-600 border border-green-200/60 rounded-md">
+                            <i class="fa-solid fa-arrow-down mr-1"></i>รายรับ
+                        </span>
+                        {% else %}
+                        <span class="px-2.5 py-1 text-xs font-bold bg-red-50 text-red-600 border border-red-200/60 rounded-md">
+                            <i class="fa-solid fa-arrow-up mr-1"></i>รายจ่าย
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-5 py-4 font-bold text-slate-800">{{ r.category }}</td>
+                    <td class="px-5 py-4 text-slate-600">{{ r.description|default:"-" }}</td>
+                    <td class="px-5 py-4 font-extrabold {% if r.record_type == 'income' %}text-green-600{% else %}text-red-600{% endif %}">
+                        {% if r.record_type == 'income' %}+{% else %}-{% endif %}฿{{ r.amount|floatformat:2 }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="py-16 text-center text-slate-400 text-sm">
+        <i class="fa-regular fa-folder-open text-3xl mb-2 text-slate-300 block"></i>
+        ไม่พบรายการธุรกรรมการเงิน
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Finance Record Modal -->
+<div id="finance-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-30 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-xl max-w-md w-full p-6 animate-fade-in">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-1.5">
+                <i class="fa-solid fa-square-plus text-blue-600"></i>
+                บันทึกรายรับ-รายจ่ายใหม่
+            </h3>
+            <button onclick="closeFinanceModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="flex flex-col gap-3.5">
+                <!-- Date & Type -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="flex flex-col">
+                        <label for="modal_date" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">วันที่</label>
+                        <input type="date" name="date" id="modal_date" required class="px-2 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                    </div>
+                    <div class="flex flex-col">
+                        <label for="modal_record_type" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">ประเภท</label>
+                        <select name="record_type" id="modal_record_type" required class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                            <option value="income">รายรับ (Income)</option>
+                            <option value="expense">รายจ่าย (Expense)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Category -->
+                <div class="flex flex-col">
+                    <label for="modal_category" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">หมวดหมู่</label>
+                    <input type="text" name="category" id="modal_category" required placeholder="เช่น ค่าบำรุงรักษา, ค่าไฟฟ้า" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                </div>
+
+                <!-- Description -->
+                <div class="flex flex-col">
+                    <label for="modal_description" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">รายละเอียด</label>
+                    <textarea name="description" id="modal_description" rows="2" placeholder="รายละเอียดรายการ" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition"></textarea>
+                </div>
+
+                <!-- Amount -->
+                <div class="flex flex-col">
+                    <label for="modal_amount" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1">จำนวนเงิน (บาท)</label>
+                    <input type="number" step="0.01" name="amount" id="modal_amount" required placeholder="เช่น 500" class="px-3 py-2 border border-slate-200 rounded-lg text-sm bg-slate-50 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition">
+                </div>
+            </div>
+
+            <!-- Modal footer -->
+            <div class="mt-6 flex items-center justify-end gap-2 border-t border-slate-100 pt-3.5">
+                <button type="button" onclick="closeFinanceModal()" class="px-4 py-2 text-xs font-semibold border border-slate-200 text-slate-600 rounded-lg bg-slate-50 hover:bg-slate-100 transition cursor-pointer">ยกเลิก</button>
+                <button type="submit" class="px-4 py-2 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow transition cursor-pointer">บันทึกข้อมูล</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openFinanceModal() {
+        // Set today's date
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('modal_date').value = today;
+        document.getElementById('modal_category').value = '';
+        document.getElementById('modal_description').value = '';
+        document.getElementById('modal_amount').value = '';
+        document.getElementById('finance-modal').classList.remove('hidden');
+    }
+    function closeFinanceModal() {
+        document.getElementById('finance-modal').classList.add('hidden');
+    }
+</script>
+{% endblock %}

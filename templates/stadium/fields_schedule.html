@@ -1,0 +1,170 @@
+{% extends 'stadium/base.html' %}
+
+{% block header_title %}ตารางเวลาแต่ละสนาม{% endblock %}
+
+{% block content %}
+<!-- Filtering / Selection bar -->
+<div class="bg-white rounded-xl border border-slate-200/80 shadow-sm p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <form method="GET" class="w-full flex flex-col sm:flex-row items-center gap-4">
+        <!-- Field dropdown -->
+        <div class="flex flex-col w-full sm:w-auto flex-1 max-w-sm">
+            <label for="field_id" class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">เลือกสนาม</label>
+            <select name="field_id" id="field_id" class="px-3 py-2 bg-slate-50 text-slate-800 border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30 hover:border-slate-300 transition">
+                {% for f in fields %}
+                <option value="{{ f.id }}" {% if f.id == selected_field.id %}selected{% endif %}>{{ f.name }} - {{ f.description }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Date select -->
+        <div class="flex flex-col w-full sm:w-auto max-w-xs">
+            <label for="date" class="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">เลือกวันที่</label>
+            <input type="date" name="date" id="date" value="{{ selected_date }}" class="px-3 py-2 bg-slate-50 text-slate-800 border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30 hover:border-slate-300 transition">
+        </div>
+
+        <!-- Submit btn -->
+        <div class="flex items-end self-end sm:self-auto h-full sm:mt-5">
+            <button type="submit" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-2 px-5 text-sm rounded-lg shadow-sm hover:shadow transition flex items-center justify-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-filter text-xs"></i>
+                กรองข้อมูล
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Main Panels for Bookings & Matches -->
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    <!-- Panel 1: Bookings of the selected field -->
+    <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm p-5">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+            <h2 class="font-bold text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-ticket text-blue-500"></i>
+                ตารางการจองสนาม - {{ selected_field.name }}
+            </h2>
+            <span class="text-xs bg-slate-100 text-slate-500 border border-slate-200 py-1 px-3 rounded-full font-semibold">{{ bookings|length }} รายการ</span>
+        </div>
+
+        {% if bookings %}
+        <div class="space-y-3">
+            {% for b in bookings %}
+            <div class="p-4 border border-slate-100 bg-slate-50/60 rounded-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3 transition hover:shadow-sm">
+                <div>
+                    <div class="text-xs font-bold text-slate-400 tracking-wider uppercase mb-1">เวลาแข่งขัน / ใช้งาน</div>
+                    <div class="text-lg font-extrabold text-slate-800 mb-0.5">
+                        <i class="fa-regular fa-clock mr-1 text-slate-500"></i>
+                        {{ b.start_time|time:"H:i" }} - {{ b.end_time|time:"H:i" }}
+                    </div>
+                    <div class="text-sm font-medium text-slate-600">
+                        <i class="fa-regular fa-user mr-1 text-slate-400"></i>
+                        ผู้จอง: <span class="font-bold text-slate-700">{{ b.customer_name }}</span>
+                    </div>
+                    {% if b.customer_phone %}
+                    <div class="text-xs font-medium text-slate-500 mt-1">
+                        <i class="fa-solid fa-phone mr-1 text-slate-400"></i>
+                        เบอร์โทร: {{ b.customer_phone }}
+                    </div>
+                    {% endif %}
+                </div>
+                <!-- Status/Price details -->
+                <div class="flex flex-col items-start md:items-end gap-2 shrink-0 self-stretch md:self-auto pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+                    <span class="text-sm font-bold text-slate-800 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
+                        ฿{{ b.total_price|floatformat:2 }}
+                    </span>
+                    {% if b.payment_status == 'paid' %}
+                    <span class="text-xs font-bold px-2.5 py-1 bg-green-100 border border-green-200 text-green-700 rounded-md">
+                        ชำระเงินแล้ว
+                    </span>
+                    {% elif b.payment_status == 'pending' %}
+                    <span class="text-xs font-bold px-2.5 py-1 bg-amber-100 border border-amber-200 text-amber-700 rounded-md">
+                        รอชำระเงิน
+                    </span>
+                    {% else %}
+                    <span class="text-xs font-bold px-2.5 py-1 bg-slate-100 border border-slate-200 text-slate-600 rounded-md">
+                        ยกเลิก
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="py-14 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50/40 text-slate-400 text-sm">
+            <i class="fa-regular fa-calendar-xmark text-3xl mb-2 text-slate-300 block"></i>
+            ไม่มีรายการจองสนามในวันนี้
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Panel 2: Matches of the selected field -->
+    <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm p-5">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+            <h2 class="font-bold text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-futbol text-orange-500"></i>
+                ตารางแข่งขันฟุตบอล - {{ selected_field.name }}
+            </h2>
+            <span class="text-xs bg-slate-100 text-slate-500 border border-slate-200 py-1 px-3 rounded-full font-semibold">{{ matches|length }} รายการ</span>
+        </div>
+
+        {% if matches %}
+        <div class="space-y-3">
+            {% for m in matches %}
+            <div class="p-4 border border-slate-100 bg-slate-50/60 rounded-xl flex flex-col justify-between items-stretch gap-4 transition hover:shadow-sm">
+                <!-- Title and status -->
+                <div class="flex flex-col sm:flex-row justify-between items-start gap-2 border-b border-slate-100 pb-2.5">
+                    <div>
+                        <div class="text-xs font-bold text-orange-500 uppercase tracking-wide mb-0.5">การแข่งแต่ละทีม</div>
+                        <h3 class="text-base font-bold text-slate-800 leading-snug">{{ m.title }}</h3>
+                    </div>
+                    <div>
+                        {% if m.status == 'live' %}
+                        <span class="px-2 py-1 text-xs font-bold bg-red-100 border border-red-200 text-red-600 rounded-md animate-pulse">กำลังแข่งขัน</span>
+                        {% elif m.status == 'scheduled' %}
+                        <span class="px-2 py-1 text-xs font-bold bg-blue-100 border border-blue-200 text-blue-600 rounded-md">รอแข่ง</span>
+                        {% elif m.status == 'completed' %}
+                        <span class="px-2 py-1 text-xs font-bold bg-slate-100 border border-slate-200 text-slate-600 rounded-md">เสร็จสิ้น</span>
+                        {% else %}
+                        <span class="px-2 py-1 text-xs font-bold bg-slate-100 border border-slate-200 text-slate-500 rounded-md">ยกเลิก</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Teams and Scores -->
+                <div class="flex items-center justify-between gap-4 py-2">
+                    <!-- Team A -->
+                    <div class="flex-1 text-center flex flex-col items-center">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">ทีมเหย้า / A</span>
+                        <div class="text-base font-bold text-slate-800">{{ m.team_a }}</div>
+                        <div class="text-2xl font-extrabold text-blue-600 bg-blue-50 px-3.5 py-1 rounded-xl border border-blue-100 mt-2">
+                            {{ m.score_a }}
+                        </div>
+                    </div>
+
+                    <!-- VS Divider -->
+                    <div class="text-xs font-bold uppercase text-slate-400 tracking-wider flex flex-col items-center shrink-0">
+                        <span>VS</span>
+                        <span class="text-xs text-slate-500 font-medium mt-2">
+                            {{ m.start_time|time:"H:i" }}
+                        </span>
+                    </div>
+
+                    <!-- Team B -->
+                    <div class="flex-1 text-center flex flex-col items-center">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">ทีมเยือน / B</span>
+                        <div class="text-base font-bold text-slate-800">{{ m.team_b }}</div>
+                        <div class="text-2xl font-extrabold text-orange-600 bg-orange-50 px-3.5 py-1 rounded-xl border border-orange-100 mt-2">
+                            {{ m.score_b }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="py-14 text-center border border-dashed border-slate-200 rounded-xl bg-slate-50/40 text-slate-400 text-sm">
+            <i class="fa-regular fa-calendar-xmark text-3xl mb-2 text-slate-300 block"></i>
+            ไม่มีรายการแข่งขันในวันนี้
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

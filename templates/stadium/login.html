@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ | Kumchoo Stadium</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- SweetAlert2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex items-center justify-center p-4">
+
+    <!-- Container Card -->
+    <div class="max-w-md w-full bg-white rounded-2xl border border-slate-200/80 shadow-lg p-6 sm:p-8 flex flex-col gap-6">
+        
+        <!-- Header / Logo -->
+        <div class="flex flex-col items-center gap-3 border-b border-slate-100 pb-5">
+            <img src="{% static 'logo.png' %}" alt="Kumchoo Stadium" class="h-16 w-16 object-contain rounded-xl bg-white p-1 select-none">
+            <div class="text-center">
+                <h2 class="text-xl font-black text-slate-800 tracking-tight leading-tight">Kumchoo Stadium</h2>
+                <p class="text-xs font-medium text-slate-400 mt-0.5 uppercase tracking-wider">ระบบบริหารจัดการสนามฟุตบอล</p>
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form method="POST" class="flex flex-col gap-4">
+            {% csrf_token %}
+
+            <!-- Username Field -->
+            <div class="flex flex-col">
+                <label for="username" class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 flex items-center gap-1">
+                    <i class="fa-regular fa-user"></i> ชื่อผู้ใช้ (Username)
+                </label>
+                <input type="text" name="username" id="username" required placeholder="ชื่อผู้ใช้ของคุณ" class="px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30 hover:border-slate-300 transition">
+            </div>
+
+            <!-- Password Field -->
+            <div class="flex flex-col">
+                <div class="flex items-center justify-between mb-1.5">
+                    <label for="password" class="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1">
+                        <i class="fa-solid fa-key"></i> รหัสผ่าน (Password)
+                    </label>
+                    <a href="{% url 'forgot_password' %}" class="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline transition">ลืมรหัสผ่าน?</a>
+                </div>
+                <input type="password" name="password" id="password" required placeholder="รหัสผ่านของคุณ" class="px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30 hover:border-slate-300 transition">
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 px-5 text-sm rounded-xl shadow-sm hover:shadow transition flex items-center justify-center gap-2 cursor-pointer mt-2">
+                <i class="fa-solid fa-right-to-bracket text-xs"></i>
+                เข้าสู่ระบบ
+            </button>
+        </form>
+
+        <!-- Footer link -->
+        <div class="border-t border-slate-100 pt-4 text-center">
+            <span class="text-xs font-medium text-slate-400">ยังไม่มีบัญชีผู้ใช้?</span>
+            <a href="{% url 'register' %}" class="text-xs font-bold text-orange-500 hover:text-orange-600 ml-1 hover:underline transition">สมัครสมาชิก</a>
+        </div>
+    </div>
+
+    <!-- Django Messages with SweetAlert2 popup -->
+    {% if messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {% for message in messages %}
+                Swal.fire({
+                    icon: "{% if message.tags == 'error' %}error{% else %}success{% endif %}",
+                    title: "{% if message.tags == 'error' %}เกิดข้อผิดพลาด!{% else %}สำเร็จ!{% endif %}",
+                    text: "{{ message|escapejs }}",
+                    confirmButtonColor: '#3b82f6',
+                    confirmButtonText: 'ตกลง'
+                });
+            {% endfor %}
+        });
+    </script>
+    {% endif %}
+
+</body>
+</html>
